@@ -3,6 +3,6 @@
 
 #include "data.h"
 
-const Lettre arial[37];
+const Letter arial[37];
 
 #endif

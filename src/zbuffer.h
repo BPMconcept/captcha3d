@@ -4,6 +4,8 @@
 #include "captcha3d.h"
 #include "data.h"
 
-void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau);
+#include <opencv/cv.h>
+
+void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre, Material materiau);
 
 #endif

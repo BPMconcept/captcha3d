@@ -82,7 +82,7 @@ struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_col
  * \param lettre Lettre en cours
  * \return Couleur pour Gouraud
  */
-struct captcha3d_color couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre lettre)
+struct captcha3d_color couleurAffichage(Triangle face, Material materiau, Light lumiere, Letter lettre)
 {
     struct captcha3d_color color;
     float coeff;
@@ -106,7 +106,7 @@ struct captcha3d_color couleurAffichage(Face face, Materiau materiau, Lumiere lu
  * \param lumiere Lumière de l'environnement
  * \param materiau Matériau de la lettre
  */
-void intensiteAuxPoints(float tab[], Vector3d normales[], Lettre lettre, Lumiere lumiere, Materiau materiau)
+void intensiteAuxPoints(float tab[], Vector3d normales[], Letter lettre, Light lumiere, Material materiau)
 {
     Vector3d lux = normaliser(lumiere.direction);
     int i;
@@ -128,7 +128,7 @@ void intensiteAuxPoints(float tab[], Vector3d normales[], Lettre lettre, Lumiere
  * \param materiau Matériau de la lettre
  * \param normale Vecteur normal
  */
-float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vector3d normale)
+float intensite(Letter lettre, Light lumiere, Material materiau, Vector3d normale)
 {
     Vector3d lux = normaliser(lumiere.direction);
     float angleDiffus;
@@ -147,7 +147,7 @@ float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vector3d norm
  * \param points[] Tableau de points
  * \return Vecteur normal
  */
-Vector3d normaleFace(Face face, Vector3d points[])
+Vector3d normaleFace(Triangle face, Vector3d points[])
 {
     Vector3d n;
     Vector3d p1, p2, p3;
@@ -205,10 +205,10 @@ Vector3d normaliser(Vector3d vecteur)
  * \param tab Tableau qui recevra les normales
  * \param lettre Lettre pour laquelle il faut calculer les normales
  */
-void normalesAuxPoints(Vector3d tab[], Lettre lettre)
+void normalesAuxPoints(Vector3d tab[], Letter lettre)
 {
     Vector3d n;
-    Face face;
+    Triangle face;
     int i;
     initialiserTableauNormales(tab, lettre.numPoints);
 

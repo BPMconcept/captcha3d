@@ -9,18 +9,18 @@
 #include "transformations.h"
 #include "illumination.h"
 
-static Materiau selectionMateriau();
+static Material selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
-static PointProjete projeter(Vector3d p, Vector3d cp, float intensite);
+static Projection projeter(Vector3d p, Vector3d cp, float intensite);
 static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp);
-static void ordonnerProjetes(PointProjete *p1, PointProjete *p2, PointProjete *p3);
-static void echanger(PointProjete *p1, PointProjete *p2);
+static void ordonnerProjetes(Projection *p1, Projection *p2, Projection *p3);
+static void echanger(Projection *p1, Projection *p2);
 
-void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau)
+void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre, Material materiau)
 {
     IplImage *temp = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
 
-    Face face;
+    Triangle face;
     int i, j, k;
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
     Vector2d triangleARemplir[3];
@@ -32,7 +32,7 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
     float intensites[500];
 
     //Définition lumière
-    Lumiere lumiere = {0.2, 0.9, {0, 0, 1}};
+    Light lumiere = {0.2, 0.9, {0, 0, 1}};
 
     //Définition du centre de projection
     Vector3d cp;
@@ -61,9 +61,9 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
         float i3 = intensites[face.c];
 
         //Obtention des points projetés
-        PointProjete pp1 = projeter(p1, cp, i1);
-        PointProjete pp2 = projeter(p2, cp, i2);
-        PointProjete pp3 = projeter(p3, cp, i3);
+        Projection pp1 = projeter(p1, cp, i1);
+        Projection pp2 = projeter(p2, cp, i2);
+        Projection pp3 = projeter(p3, cp, i3);
 
         //Ordonnancement des projetés
         ordonnerProjetes(&pp1, &pp2, &pp3);
@@ -162,9 +162,9 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
  *
  * \return Materiau de couleur aléatoire
  */
-Materiau selectionMateriau()
+Material selectionMateriau()
 {
-    Materiau materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
+    Material materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
 
     materiau.couleur.red = rand() % 256;
     materiau.couleur.green = rand() % 256;
@@ -215,10 +215,10 @@ void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limit
  *
  * \return Point projeté sur l'écran
  */
-PointProjete projeter(Vector3d p, Vector3d cp, float intensite)
+Projection projeter(Vector3d p, Vector3d cp, float intensite)
 {
     //Equation du plan de projection z=0
-    PointProjete projete;
+    Projection projete;
     Vector2d point;
 
     point.x = floor((p.x - cp.x) * (-cp.z) / (p.z - cp.z) + cp.x);
@@ -262,7 +262,7 @@ float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
  * \param p2 2e point projeté à trier
  * \param p3 3e point projeté à trier
  */
-void ordonnerProjetes(PointProjete *p1, PointProjete *p2, PointProjete *p3)
+void ordonnerProjetes(Projection *p1, Projection *p2, Projection *p3)
 {
     if ((*p1).p.y > (*p2).p.y) {
         echanger(p1, p2);
@@ -283,9 +283,9 @@ void ordonnerProjetes(PointProjete *p1, PointProjete *p2, PointProjete *p3)
  * \param p1 1er point projeté que l'on veut échanger
  * \param p2 2e point projeté que l'on veut échanger
  */
-void echanger(PointProjete *p1, PointProjete *p2)
+void echanger(Projection *p1, Projection *p2)
 {
-    PointProjete temp;
+    Projection temp;
     temp.p = (*p1).p;
     temp.i = (*p1).i;
     (*p1).p = (*p2).p;

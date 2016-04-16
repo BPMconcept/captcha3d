@@ -46,7 +46,7 @@ void parametresTransformation(float *z, int *marge, float *e, float *offset, int
  *
  * \return Lettre transformée
  */
-Lettre transformation(Lettre lettre, int i, int width, int height, int z, int marge, float e, float offset)
+Letter transformation(Letter lettre, int i, int width, int height, int z, int marge, float e, float offset)
 {
     Vector3d translate;
     float angle1, angle2, angle3;
@@ -125,9 +125,9 @@ float calculOffsetX(float z, int width, int marge)
  *
  * \return Lettre translatée
  */
-Lettre translation(Lettre lettre, Vector3d vecteur)
+Letter translation(Letter lettre, Vector3d vecteur)
 {
-    Lettre lettreTranslatee = lettre;
+    Letter lettreTranslatee = lettre;
     int i;
     for (i = 0; i < lettre.numPoints; i++) {
         lettreTranslatee.points[i].x += vecteur.x;
@@ -150,9 +150,9 @@ Lettre translation(Lettre lettre, Vector3d vecteur)
  *
  * \return Lettre mise à l'échelle
  */
-Lettre echelle(Lettre lettre, float coeff)
+Letter echelle(Letter lettre, float coeff)
 {
-    Lettre lettreRedimensionnee = lettre;
+    Letter lettreRedimensionnee = lettre;
     int i;
     for (i = 0; i < lettre.numPoints; i++) {
         lettreRedimensionnee.points[i].x *= coeff;
@@ -171,7 +171,7 @@ Lettre echelle(Lettre lettre, float coeff)
  *
  * \return Barycentre (point de l'espace 3d)
  */
-Vector3d barycentre(Lettre lettre)
+Vector3d barycentre(Letter lettre)
 {
     int i;
     Vector3d barycentre = {0, 0, 0};
@@ -197,7 +197,7 @@ Vector3d barycentre(Lettre lettre)
  *
  * \return Lettre déformée
  */
-Lettre deformation(Lettre lettre)
+Letter deformation(Letter lettre)
 {
     float offset, coeff = 1;
     int i;
@@ -231,7 +231,7 @@ Lettre deformation(Lettre lettre)
  *
  * \return Lettre déformée
  */
-Lettre deformation_sin(Lettre lettre, char type)
+Letter deformation_sin(Letter lettre, char type)
 {
     int i;
     Vector3d p;
@@ -260,9 +260,9 @@ Lettre deformation_sin(Lettre lettre, char type)
  *
  * \return 	Lettre ayant subie la rotation
  */
-Lettre rotation(Lettre lettre, Vector3d angles)
+Letter rotation(Letter lettre, Vector3d angles)
 {
-    Lettre lettreRot = lettre;
+    Letter lettreRot = lettre;
 
     // Initialisation des matrices
     Vector3d rotx[3] = {{1, 0, 0}, {0, cos(angles.x), -sin(angles.x)}, {0, sin(angles.x), cos(angles.x)}} ;

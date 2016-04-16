@@ -6,7 +6,7 @@
 
 #include <opencv/cv.h>
 
-static Lettre descriptionLettre(char c);
+static Letter descriptionLettre(char c);
 
 void captcha3d_generate(struct captcha3d_image *image, const char *string, struct captcha3d_color couleur)
 {
@@ -14,7 +14,7 @@ void captcha3d_generate(struct captcha3d_image *image, const char *string, struc
     cvZero(buffer);
 
     int i;
-    Materiau materiau = {couleur, 0.3, 0.9, 30};
+    Material materiau = {couleur, 0.3, 0.9, 30};
 
     //Paramètres pour le placement des lettres dans l'espace
     float z, e, offset;
@@ -29,7 +29,7 @@ void captcha3d_generate(struct captcha3d_image *image, const char *string, struc
     //Pour chaque lettre de la chaine de caractère
     for (i = 0; i < strlen(string); i++) {
         // Chargement de la lettre
-        Lettre lettre = descriptionLettre(string[i]);
+        Letter lettre = descriptionLettre(string[i]);
 
         //Transformation de la lettre
         lettre = transformation(lettre, i, image->width, image->height, z, marge, e, offset);
@@ -72,7 +72,7 @@ void captcha3d_image_fill(struct captcha3d_image *image, struct captcha3d_color 
  *
  * \param c Charactère dont on veut la description
  */
-Lettre descriptionLettre(char c)
+Letter descriptionLettre(char c)
 {
     switch (c) {
     case '9':

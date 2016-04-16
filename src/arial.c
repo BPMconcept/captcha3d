@@ -1,6 +1,6 @@
 #include "arial.h"
 
-const Lettre arial[37] = {
+const Letter arial[37] = {
 //TRI9
     {
         242,
