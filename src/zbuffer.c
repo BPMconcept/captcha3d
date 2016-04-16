@@ -21,20 +21,21 @@
  * \param couleur Couleur du matériau des lettres
  *
  */
-void generer(IplImage *img, int width, int height, char string[], CvScalar couleur)
+void generer(struct captcha3d_image *image, char string[], CvScalar couleur)
 {
-    CvMat* buffer = cvCreateMat(width, height, CV_32FC1);
+    CvMat* buffer = cvCreateMat(image->width, image->height, CV_32FC1);
     cvZero(buffer);
+
     int i;
     Lettre lettre;
-    Materiau materiau = {couleur, 0.3, 0.9, 30};;
+    Materiau materiau = {couleur, 0.3, 0.9, 30};
 
     //Paramètres pour le placement des lettres dans l'espace
     float z, e, offset;
     int marge;
 
     //Obtention des paramètres pour le placement des lettres dans l'espace
-    parametresTransformation(&z, &marge, &e, &offset, height, width, strlen(string));
+    parametresTransformation(&z, &marge, &e, &offset, image->height, image->width, strlen(string));
 
     //Sélection d'un matériau aléatoire pour la lettre
     //materiau=selectionMateriau();
@@ -45,9 +46,9 @@ void generer(IplImage *img, int width, int height, char string[], CvScalar coule
         lettre = descriptionLettre(string[i]);
 
         //Transformation de la lettre
-        lettre = transformation(lettre, i, width, height, z, marge, e, offset);
+        lettre = transformation(lettre, i, image->width, image->height, z, marge, e, offset);
 
-        zBufferGouraud(img, buffer, lettre, materiau, width, height);
+        zBufferGouraud(image, buffer, lettre, materiau);
     }
 
 }
@@ -64,9 +65,9 @@ void generer(IplImage *img, int width, int height, char string[], CvScalar coule
  * \param height Hauteur de l'image
  *
  */
-void zBufferGouraud(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
+void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau)
 {
-    IplImage *temp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+    IplImage *temp = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
 
     Face face;
     int i, j, k;
@@ -87,8 +88,8 @@ void zBufferGouraud(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materi
 
     //Définition du centre de projection
     CvPoint3D32f cp;
-    cp.x = width / 2;
-    cp.y = height / 2;
+    cp.x = image->width / 2;
+    cp.y = image->height / 2;
     cp.z = -Z_CENTRE_PROJECTION;
 
     // Calcul des normales aux points
@@ -198,7 +199,13 @@ void zBufferGouraud(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materi
                     couleurPixel = couleurAffichageGouraud(ip, materiau.couleur);
 
                     //Application de la couleur et mise à jour du zbuffer
-                    cvSet2D(img, height - k, j, couleurPixel);
+//                    cvSet2D(img, height - k, j, couleurPixel);
+                    struct captcha3d_pixel *pixel = captcha3d_image_get(image, j, image->height - k);
+                    pixel->red = couleurPixel.val[0];
+                    pixel->green = couleurPixel.val[1];
+                    pixel->blue = couleurPixel.val[2];
+                    pixel->alpha = couleurPixel.val[3];
+
                     CV_MAT_ELEM(*buffer, float, j, k) = z;
                 }
             }
