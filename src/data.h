@@ -18,8 +18,7 @@
  *
  * Vecteur défini par ses coordonnées dans l'espace à 3 dimensions.
  */
-typedef struct
-{
+typedef struct {
     float x; /*!< coordonnée x*/
     float y; /*!< coordonnée y*/
     float z; /*!< coordonnée z*/
@@ -32,8 +31,7 @@ Vecteur;
  *
  * Face triangulaire, a,b et c sont les identifiants des 3 points constituants la face.
  */
-typedef struct
-{
+typedef struct {
     int a; /*!< identifiant point a du triangle*/
     int b; /*!< identifiant point b du triangle*/
     int c; /*!< identifiant point c du triangle*/
@@ -46,8 +44,7 @@ Face;
  *
  * Une lettre est définie par un nombre de point, un tableau de points et un tableau de faces.
  */
-typedef struct
-{
+typedef struct {
     int numPoints; /*!< nombre de points*/
     CvPoint3D32f points[500]; /*!< tableau des points*/
     int numFaces; /*!< nombre de faces*/
@@ -61,8 +58,7 @@ Lettre;
  *
  * Une lumiere unidirectionnelle définie par des intensités et une direction.
  */
-typedef struct
-{
+typedef struct {
     float ia; /*!< intensité ambiante */
     float ip; /*!< intensité */
     Vecteur direction; /*!< direction de la lumière*/
@@ -75,12 +71,11 @@ Lumiere;
  *
  * Un materiau dispose de propriétés intrinsèques qui conditionnent l'interaction de la lumière avec l'objet.
  */
-typedef struct
-{
+typedef struct {
     CvScalar couleur; /*!< couleur */
     float ka; /*!< coefficient ambiant */
-    float kd; /*!< coefficient diffus */   
-    float ks; /*!< coefficient speculair */   
+    float kd; /*!< coefficient diffus */
+    float ks; /*!< coefficient speculair */
     int n; /*!< exposant spéculaire*/
 }
 Materiau;
@@ -91,8 +86,7 @@ Materiau;
  *
  * Un point projete sur l'écran est un point CvPoint qui dipose d'une intensité (correspondante à celle de son homologue 3D de l'espace)
  */
-typedef struct
-{
+typedef struct {
     CvPoint p; /*!< point */
     float i; /*!< intensité */
 }
