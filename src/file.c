@@ -48,7 +48,7 @@ void save_png(struct captcha3d_config *config, struct captcha3d_image *image)
 
         for (int x = 0; x < config->width; ++x) {
             png_byte* byte = &(row[x*4]);
-            struct captcha3d_pixel *pixel = captcha3d_image_get(image, x, y);
+            struct captcha3d_color *pixel = captcha3d_image_get(image, x, y);
             byte[0] = pixel->red;
             byte[1] = pixel->green;
             byte[2] = pixel->blue;

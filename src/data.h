@@ -72,7 +72,7 @@ Lumiere;
  * Un materiau dispose de propriétés intrinsèques qui conditionnent l'interaction de la lumière avec l'objet.
  */
 typedef struct {
-    struct captcha3d_pixel couleur; /*!< couleur */
+    struct captcha3d_color couleur; /*!< couleur */
     float ka; /*!< coefficient ambiant */
     float kd; /*!< coefficient diffus */
     float ks; /*!< coefficient speculair */

@@ -43,9 +43,9 @@ void degrade(IplImage *img, int width, int height, CvScalar couleurHaute)
  * \brief Retourne une couleur aléatoire
  *
  */
-struct captcha3d_pixel couleurAleatoire()
+struct captcha3d_color couleurAleatoire()
 {
-    struct captcha3d_pixel couleur;
+    struct captcha3d_color couleur;
 
     couleur.red = rand() % 256;
     couleur.green = rand() % 256;
@@ -63,7 +63,7 @@ struct captcha3d_pixel couleurAleatoire()
  * \param couleur Couleur initiale
  * \return Couleur pour Gouraud
  */
-struct captcha3d_pixel couleurAffichageGouraud(float coeff, struct captcha3d_pixel couleur)
+struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_color couleur)
 {
     couleur.red = coeff * couleur.red <= 255 ? coeff * couleur.red : 255;
     couleur.green = coeff * couleur.green <= 255 ? coeff * couleur.green : 255;
@@ -82,9 +82,9 @@ struct captcha3d_pixel couleurAffichageGouraud(float coeff, struct captcha3d_pix
  * \param lettre Lettre en cours
  * \return Couleur pour Gouraud
  */
-struct captcha3d_pixel couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre lettre)
+struct captcha3d_color couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre lettre)
 {
-    struct captcha3d_pixel color;
+    struct captcha3d_color color;
     float coeff;
     Vector3d normale = normaleFace(face, lettre.points);
     coeff = intensite(lettre, lumiere, materiau, normale);
@@ -147,10 +147,10 @@ float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vector3d norm
  * \param points[] Tableau de points
  * \return Vecteur normal
  */
-Vector3d normaleFace(Face face, CvPoint3D32f points[])
+Vector3d normaleFace(Face face, Vector3d points[])
 {
     Vector3d n;
-    CvPoint3D32f p1, p2, p3;
+    Vector3d p1, p2, p3;
 
     p1 = points[face.a];
     p2 = points[face.b];

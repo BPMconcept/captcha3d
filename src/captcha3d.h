@@ -13,7 +13,7 @@ struct captcha3d_config {
     size_t aliasing;
 };
 
-struct captcha3d_pixel {
+struct captcha3d_color {
     uint8_t red;
     uint8_t green;
     uint8_t blue;
@@ -23,10 +23,10 @@ struct captcha3d_pixel {
 struct captcha3d_image {
     size_t width;
     size_t height;
-    struct captcha3d_pixel data[];
+    struct captcha3d_color data[];
 };
 
-static inline struct captcha3d_pixel* captcha3d_image_get(struct captcha3d_image *image, size_t w, size_t h)
+static inline struct captcha3d_color* captcha3d_image_get(struct captcha3d_image *image, size_t w, size_t h)
 {
     assert(w < image->width);
     assert(h < image->height);
@@ -36,9 +36,9 @@ static inline struct captcha3d_pixel* captcha3d_image_get(struct captcha3d_image
 }
 
 struct captcha3d_image* captcha3d_image_init(size_t width, size_t height);
-void captcha3d_image_fill(struct captcha3d_image *image, struct captcha3d_pixel color);
+void captcha3d_image_fill(struct captcha3d_image *image, struct captcha3d_color color);
 void captcha3d_image_release(struct captcha3d_image *image);
 
-void captcha3d_generate(struct captcha3d_image *image, const char *string, struct captcha3d_pixel couleur);
+void captcha3d_generate(struct captcha3d_image *image, const char *string, struct captcha3d_color couleur);
 
 #endif

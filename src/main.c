@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     const int width = (100 + config.aliasing) * config.width / 100;
     const int height = (100 + config.aliasing) * config.height / 100;
 
-    struct captcha3d_pixel background = {255, 255, 255, 255};
+    struct captcha3d_color background = {255, 255, 255, 255};
     struct captcha3d_image *image = captcha3d_image_init(width, height);
     captcha3d_image_fill(image, background);
 

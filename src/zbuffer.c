@@ -10,7 +10,6 @@
 #include "illumination.h"
 #include "param.h"
 
-static void zBuffer(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height);
 static Materiau selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
 static PointProjete projeter(Vector3d p, Vector3d cp, float intensite);
@@ -18,18 +17,6 @@ static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector
 static void ordonnerProjetes(PointProjete *p1, PointProjete *p2, PointProjete *p3);
 static void echanger(PointProjete *p1, PointProjete *p2);
 
-/**
- * \fn void zBufferGouraud(IplImage *img,CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
- * \brief Algorithme de Zbuffer avec ombrage de Gouraud
- *
- * \param img Image destination
- * \param buffer Zbuffer des profondeurs d'objets
- * \param lettre Lettre à dessiner
- * \param materiau Materiau de la lettre
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- *
- */
 void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau)
 {
     IplImage *temp = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
@@ -161,89 +148,10 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
 
                     //Application de la couleur et mise à jour du zbuffer
 //                    cvSet2D(img, height - k, j, couleurPixel);
-                    struct captcha3d_pixel *pixel = captcha3d_image_get(image, j, image->height - k);
+                    struct captcha3d_color *pixel = captcha3d_image_get(image, j, image->height - k);
 
                     *pixel = couleurAffichageGouraud(ip, materiau.couleur);
 
-                    CV_MAT_ELEM(*buffer, float, j, k) = z;
-                }
-            }
-        }
-    }
-}
-
-/**
- * \fn void zBuffer(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
- * \brief Algorithme de Zbuffer simple avec ombrage plat
- *
- * \param img Image destination
- * \param buffer Zbuffer des profondeurs d'objets
- * \param lettre Lettre à dessiner
- * \param materiau Materiau de la lettre
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- *
- */
-void zBuffer(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
-{
-    IplImage *temp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-    cvZero(buffer);
-
-    Face face;
-    int i, j, k;
-    int xDebut, xFin, xLimiteG, xLimiteD;
-    CvPoint3D32f p1, p2, p3;
-    PointProjete pp1, pp2, pp3;
-    Vector2d triangleARemplir[3];
-    float z, zbuff;
-    Lumiere lumiere = {0.2, 0.9, {0, 0, 1}};
-
-    //Centre de projection
-    Vector3d cp;
-    cp.x = width / 2;
-    cp.y = height / 2;
-    cp.z = -Z_CENTRE_PROJECTION;
-
-    for (i = 0; i < lettre.numFaces; i++) {
-        cvSet(temp, cvScalar(255, 255, 255, 0), 0);
-        face = lettre.faces[i];
-
-        struct captcha3d_pixel couleurPixel = couleurAffichage(face, materiau, lumiere, lettre);
-
-        //Obtention des points 3D de la face
-        Vector3d p1 = lettre.points[face.a];
-        Vector3d p2 = lettre.points[face.b];
-        Vector3d p3 = lettre.points[face.c];
-
-        //Obtention des points projetés
-        PointProjete pp1 = projeter(p1, cp, 0);
-        PointProjete pp2 = projeter(p2, cp, 0);
-        PointProjete pp3 = projeter(p3, cp, 0);
-
-        ordonnerProjetes(&pp1, &pp2, &pp3);
-
-        triangleARemplir[0] = pp1.p;
-        triangleARemplir[1] = pp2.p;
-        triangleARemplir[2] = pp3.p;
-
-        cvFillConvexPoly(temp, triangleARemplir, 3, CV_RGB(0, 0, 0), 8, 0);
-
-        xLimiteG = min(min(pp1.p.x, pp2.p.x), pp3.p.x);
-        xLimiteD = max(max(pp1.p.x, pp2.p.x), pp3.p.x);
-
-        for (k = pp1.p.y; k <= pp3.p.y; k++) {
-            xDebut = -1;
-            xFin = -1;
-            //Calcul des bornes de la ligne
-            ligne(&xDebut, &xFin, temp, k, xLimiteG, xLimiteD);
-
-            for (j = xDebut; j <= xFin; j++) {
-                z = profondeur(j, k, p1, p2, p3, cp);
-                zbuff = CV_MAT_ELEM(*buffer, float, j, k);
-                //Si le z est plus petit que celui du buffer, ou que le buffer est encore à 0
-                if (z <= zbuff || zbuff == 0) {
-                    struct captcha3d_pixel *pixel = captcha3d_image_get(image, j, height - k);
-                    *pixel = couleurPixel; //cvSet2D(img, height - k, j, couleurPixel);
                     CV_MAT_ELEM(*buffer, float, j, k) = z;
                 }
             }
