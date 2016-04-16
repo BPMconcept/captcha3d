@@ -1,6 +1,8 @@
 #ifndef DATA_H_INCLUDED
 #define DATA_H_INCLUDED
 
+#include "captcha3d.h"
+
 #define Z_CENTRE_PROJECTION 			600
 #define PI								3.14159
 #define DEFORMATION_SIN_AMPLITUDE		0.5
@@ -12,18 +14,16 @@
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
 
-/**
- * \struct Vecteur
- * \brief Vecteur.
- *
- * Vecteur défini par ses coordonnées dans l'espace à 3 dimensions.
- */
 typedef struct {
-    float x; /*!< coordonnée x*/
-    float y; /*!< coordonnée y*/
-    float z; /*!< coordonnée z*/
-}
-Vecteur;
+    float x;
+    float y;
+    float z;
+} Vector3d;
+
+typedef struct {
+    float x;
+    float y;
+} Vector2d;
 
 /**
  * \struct Face
@@ -46,7 +46,7 @@ Face;
  */
 typedef struct {
     int numPoints; /*!< nombre de points*/
-    CvPoint3D32f points[500]; /*!< tableau des points*/
+    Vector3d points[500]; /*!< tableau des points*/
     int numFaces; /*!< nombre de faces*/
     Face faces[800]; /*!< tableau des faces*/
 }
@@ -61,7 +61,7 @@ Lettre;
 typedef struct {
     float ia; /*!< intensité ambiante */
     float ip; /*!< intensité */
-    Vecteur direction; /*!< direction de la lumière*/
+    Vector3d direction; /*!< direction de la lumière*/
 }
 Lumiere;
 
@@ -72,13 +72,15 @@ Lumiere;
  * Un materiau dispose de propriétés intrinsèques qui conditionnent l'interaction de la lumière avec l'objet.
  */
 typedef struct {
-    CvScalar couleur; /*!< couleur */
+    struct captcha3d_pixel couleur; /*!< couleur */
     float ka; /*!< coefficient ambiant */
     float kd; /*!< coefficient diffus */
     float ks; /*!< coefficient speculair */
     int n; /*!< exposant spéculaire*/
 }
 Materiau;
+
+#include <opencv/cv.h>
 
 /**
  * \struct PointProjete
@@ -87,9 +89,9 @@ Materiau;
  * Un point projete sur l'écran est un point CvPoint qui dipose d'une intensité (correspondante à celle de son homologue 3D de l'espace)
  */
 typedef struct {
-    CvPoint p; /*!< point */
-    float i; /*!< intensité */
+    Vector2d p;
+    float i;
 }
 PointProjete;
 
-#endif // DATA_H_INCLUDED
+#endif

@@ -43,13 +43,15 @@ void degrade(IplImage *img, int width, int height, CvScalar couleurHaute)
  * \brief Retourne une couleur aléatoire
  *
  */
-CvScalar couleurAleatoire()
+struct captcha3d_pixel couleurAleatoire()
 {
-    CvScalar couleur;
-    couleur.val[0] = rand() % 256;
-    couleur.val[1] = rand() % 256;
-    couleur.val[2] = rand() % 256;
-    couleur.val[3] = 255;
+    struct captcha3d_pixel couleur;
+
+    couleur.red = rand() % 256;
+    couleur.green = rand() % 256;
+    couleur.blue = rand() % 256;
+    couleur.alpha = 255;
+
     return couleur;
 }
 
@@ -61,14 +63,13 @@ CvScalar couleurAleatoire()
  * \param couleur Couleur initiale
  * \return Couleur pour Gouraud
  */
-CvScalar couleurAffichageGouraud(float coeff, CvScalar couleur)
+struct captcha3d_pixel couleurAffichageGouraud(float coeff, struct captcha3d_pixel couleur)
 {
-    CvScalar couleurAffichee = couleur;
-    couleurAffichee.val[0] *= coeff;
-    couleurAffichee.val[1] *= coeff;
-    couleurAffichee.val[2] *= coeff;
+    couleur.red = coeff * couleur.red <= 255 ? coeff * couleur.red : 255;
+    couleur.green = coeff * couleur.green <= 255 ? coeff * couleur.green : 255;
+    couleur.blue = coeff * couleur.blue <= 255 ? coeff * couleur.blue : 255;
 
-    return couleurAffichee;
+    return couleur;
 }
 
 /**
@@ -81,19 +82,18 @@ CvScalar couleurAffichageGouraud(float coeff, CvScalar couleur)
  * \param lettre Lettre en cours
  * \return Couleur pour Gouraud
  */
-CvScalar couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre lettre)
+struct captcha3d_pixel couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre lettre)
 {
+    struct captcha3d_pixel color;
     float coeff;
-    CvScalar couleurAffichee = materiau.couleur;
-    Vecteur normale = normaleFace(face, lettre.points);
-
+    Vector3d normale = normaleFace(face, lettre.points);
     coeff = intensite(lettre, lumiere, materiau, normale);
 
-    couleurAffichee.val[0] *= coeff;
-    couleurAffichee.val[1] *= coeff;
-    couleurAffichee.val[2] *= coeff;
+    color.red = coeff * materiau.couleur.red <= 255 ? coeff * materiau.couleur.red : 255;
+    color.green = coeff * materiau.couleur.green <= 255 ? coeff * materiau.couleur.green : 255;
+    color.blue = coeff * materiau.couleur.blue <= 255 ? coeff * materiau.couleur.blue : 255;
 
-    return couleurAffichee;
+    return color;
 }
 
 /**
@@ -106,9 +106,9 @@ CvScalar couleurAffichage(Face face, Materiau materiau, Lumiere lumiere, Lettre 
  * \param lumiere Lumière de l'environnement
  * \param materiau Matériau de la lettre
  */
-void intensiteAuxPoints(float tab[], Vecteur normales[], Lettre lettre, Lumiere lumiere, Materiau materiau)
+void intensiteAuxPoints(float tab[], Vector3d normales[], Lettre lettre, Lumiere lumiere, Materiau materiau)
 {
-    Vecteur lux = normaliser(lumiere.direction);
+    Vector3d lux = normaliser(lumiere.direction);
     int i;
     float angleDiffus;
 
@@ -128,9 +128,9 @@ void intensiteAuxPoints(float tab[], Vecteur normales[], Lettre lettre, Lumiere 
  * \param materiau Matériau de la lettre
  * \param normale Vecteur normal
  */
-float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vecteur normale)
+float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vector3d normale)
 {
-    Vecteur lux = normaliser(lumiere.direction);
+    Vector3d lux = normaliser(lumiere.direction);
     float angleDiffus;
 
     //Calcul de l'intensité à chaque point de la lettre
@@ -147,9 +147,9 @@ float intensite(Lettre lettre, Lumiere lumiere, Materiau materiau, Vecteur norma
  * \param points[] Tableau de points
  * \return Vecteur normal
  */
-Vecteur normaleFace(Face face, CvPoint3D32f points[])
+Vector3d normaleFace(Face face, CvPoint3D32f points[])
 {
-    Vecteur n;
+    Vector3d n;
     CvPoint3D32f p1, p2, p3;
 
     p1 = points[face.a];
@@ -172,7 +172,7 @@ Vecteur normaleFace(Face face, CvPoint3D32f points[])
  * \param N Vecteur normal
  * \return angle
  */
-float angleDiffusion(Vecteur L, Vecteur N)
+float angleDiffusion(Vector3d L, Vector3d N)
 {
     //Produit scalaire pour obtenir l'angle
     return -((L.x) * (N.x) + (L.y) * (N.y) + (L.z) * (N.z));
@@ -185,9 +185,9 @@ float angleDiffusion(Vecteur L, Vecteur N)
  * \param vecteur Vecteur à normaliser
  * \return vecteur normalisé
  */
-Vecteur normaliser(Vecteur vecteur)
+Vector3d normaliser(Vector3d vecteur)
 {
-    Vecteur vecteurNormal = vecteur;
+    Vector3d vecteurNormal = vecteur;
     float norme;
     norme = sqrt((vecteur.x) * (vecteur.x) + (vecteur.y) * (vecteur.y) + (vecteur.z) * (vecteur.z));
 
@@ -205,9 +205,9 @@ Vecteur normaliser(Vecteur vecteur)
  * \param tab Tableau qui recevra les normales
  * \param lettre Lettre pour laquelle il faut calculer les normales
  */
-void normalesAuxPoints(Vecteur tab[], Lettre lettre)
+void normalesAuxPoints(Vector3d tab[], Lettre lettre)
 {
-    Vecteur n;
+    Vector3d n;
     Face face;
     int i;
     initialiserTableauNormales(tab, lettre.numPoints);
@@ -238,9 +238,9 @@ void normalesAuxPoints(Vecteur tab[], Lettre lettre)
  * \param n2 Deuxième vecteur à additioner
  * \return Vecteur total
  */
-Vecteur additionerVecteurs(Vecteur n1, Vecteur n2)
+Vector3d additionerVecteurs(Vector3d n1, Vector3d n2)
 {
-    Vecteur n;
+    Vector3d n;
     n.x = n1.x + n2.x;
     n.y = n1.y + n2.y;
     n.z = n1.z + n2.z;
@@ -255,9 +255,9 @@ Vecteur additionerVecteurs(Vecteur n1, Vecteur n2)
  * \param tab Tableau à initialiser
  * \param taille Taille du tableau
  */
-void initialiserTableauNormales(Vecteur tab[], int taille)
+void initialiserTableauNormales(Vector3d tab[], int taille)
 {
-    Vecteur nul;
+    Vector3d nul;
     int i;
 
     nul.x = 0;

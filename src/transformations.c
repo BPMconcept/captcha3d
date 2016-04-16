@@ -49,7 +49,7 @@ void parametresTransformation(float *z, int *marge, float *e, float *offset, int
  */
 Lettre transformation(Lettre lettre, int i, int width, int height, int z, int marge, float e, float offset)
 {
-    Vecteur translate;
+    Vector3d translate;
     float angle1, angle2, angle3;
 
     // Déformation
@@ -66,7 +66,7 @@ Lettre transformation(Lettre lettre, int i, int width, int height, int z, int ma
     angle3 = (float) 1.5 * rand() / RAND_MAX - 0.75;
 
     //Rotation aléatoire
-    Vecteur angles = {angle1, angle2, angle3} ;
+    Vector3d angles = {angle1, angle2, angle3} ;
     lettre = rotation(lettre, angles);
 
     // Translation de la lettre
@@ -90,9 +90,9 @@ Lettre transformation(Lettre lettre, int i, int width, int height, int z, int ma
  *
  * \return Vecteur de translation
  */
-Vecteur calculterTranslation(int width, int height, int marge, float z)
+Vector3d calculterTranslation(int width, int height, int marge, float z)
 {
-    Vecteur translate;
+    Vector3d translate;
 
     translate.x = calculOffsetX(z, width, marge);
     translate.y = height / 2;
@@ -126,7 +126,7 @@ float calculOffsetX(float z, int width, int marge)
  *
  * \return Lettre translatée
  */
-Lettre translation(Lettre lettre, Vecteur vecteur)
+Lettre translation(Lettre lettre, Vector3d vecteur)
 {
     Lettre lettreTranslatee = lettre;
     int i;
@@ -172,10 +172,10 @@ Lettre echelle(Lettre lettre, float coeff)
  *
  * \return Barycentre (point de l'espace 3d)
  */
-CvPoint3D32f barycentre(Lettre lettre)
+Vector3d barycentre(Lettre lettre)
 {
     int i;
-    CvPoint3D32f barycentre = {0, 0, 0};
+    Vector3d barycentre = {0, 0, 0};
 
     for (i = 0; i < lettre.numPoints; i++) {
         barycentre.x += lettre.points[i].x;
@@ -203,7 +203,7 @@ Lettre deformation(Lettre lettre)
     float offset, coeff = 1;
     int i;
     unsigned int b;
-    CvPoint3D32f p;
+    Vector3d p;
 
     for (i = 0; i < lettre.numPoints; i++) {
         b = rand () % 2;
@@ -235,7 +235,7 @@ Lettre deformation(Lettre lettre)
 Lettre deformation_sin(Lettre lettre, char type)
 {
     int i;
-    CvPoint3D32f p;
+    Vector3d p;
 
     for (i = 0; i < lettre.numPoints; i++) {
         p = lettre.points[i];
@@ -261,14 +261,14 @@ Lettre deformation_sin(Lettre lettre, char type)
  *
  * \return 	Lettre ayant subie la rotation
  */
-Lettre rotation(Lettre lettre, Vecteur angles)
+Lettre rotation(Lettre lettre, Vector3d angles)
 {
     Lettre lettreRot = lettre;
 
     // Initialisation des matrices
-    Vecteur rotx[3] = {{1, 0, 0}, {0, cos(angles.x), -sin(angles.x)}, {0, sin(angles.x), cos(angles.x)}} ;
-    Vecteur roty[3] = {{cos(angles.y), 0, sin(angles.y)}, {0, 1, 0}, { -sin(angles.y), 0, cos(angles.y)}} ;
-    Vecteur rotz[3] = {{cos(angles.z), -sin(angles.z), 0}, {sin(angles.z), cos(angles.z), 0}, {0, 0, 1}} ;
+    Vector3d rotx[3] = {{1, 0, 0}, {0, cos(angles.x), -sin(angles.x)}, {0, sin(angles.x), cos(angles.x)}} ;
+    Vector3d roty[3] = {{cos(angles.y), 0, sin(angles.y)}, {0, 1, 0}, { -sin(angles.y), 0, cos(angles.y)}} ;
+    Vector3d rotz[3] = {{cos(angles.z), -sin(angles.z), 0}, {sin(angles.z), cos(angles.z), 0}, {0, 0, 1}} ;
 
     int i;
     for (i = 0; i < lettre.numPoints; i++) {
@@ -294,9 +294,9 @@ Lettre rotation(Lettre lettre, Vecteur angles)
  *
  * \return 	Point 3d
  */
-CvPoint3D32f appliquerMatrice(Vecteur m[3], CvPoint3D32f q)
+Vector3d appliquerMatrice(Vector3d m[3], Vector3d q)
 {
-    CvPoint3D32f p = {
+    Vector3d p = {
         p.x = m[0].x * q.x + m[1].x * q.y + m[2].x * q.z ,
         p.y = m[0].y * q.x + m[1].y * q.y + m[2].y * q.z ,
         p.z = m[0].z * q.x + m[1].z * q.y + m[2].z * q.z

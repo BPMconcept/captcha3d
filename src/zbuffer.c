@@ -10,48 +10,13 @@
 #include "illumination.h"
 #include "param.h"
 
-/**
- * \fn void generer(IplImage *img,int width,int height, char string[], CvScalar couleur)
- * \brief Génère l'image du captcha 3d
- *
- * \param img Image destination
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- * \param string[] Chaine de caractère que l'ont veut afficher
- * \param couleur Couleur du matériau des lettres
- *
- */
-void generer(struct captcha3d_image *image, char string[], CvScalar couleur)
-{
-    CvMat* buffer = cvCreateMat(image->width, image->height, CV_32FC1);
-    cvZero(buffer);
-
-    int i;
-    Lettre lettre;
-    Materiau materiau = {couleur, 0.3, 0.9, 30};
-
-    //Paramètres pour le placement des lettres dans l'espace
-    float z, e, offset;
-    int marge;
-
-    //Obtention des paramètres pour le placement des lettres dans l'espace
-    parametresTransformation(&z, &marge, &e, &offset, image->height, image->width, strlen(string));
-
-    //Sélection d'un matériau aléatoire pour la lettre
-    //materiau=selectionMateriau();
-
-    //Pour chaque lettre de la chaine de caractère
-    for (i = 0; i < strlen(string); i++) {
-        // Chargement de la lettre
-        lettre = descriptionLettre(string[i]);
-
-        //Transformation de la lettre
-        lettre = transformation(lettre, i, image->width, image->height, z, marge, e, offset);
-
-        zBufferGouraud(image, buffer, lettre, materiau);
-    }
-
-}
+static void zBuffer(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height);
+static Materiau selectionMateriau();
+static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
+static PointProjete projeter(Vector3d p, Vector3d cp, float intensite);
+static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp);
+static void ordonnerProjetes(PointProjete *p1, PointProjete *p2, PointProjete *p3);
+static void echanger(PointProjete *p1, PointProjete *p2);
 
 /**
  * \fn void zBufferGouraud(IplImage *img,CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
@@ -72,22 +37,21 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
     Face face;
     int i, j, k;
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
-    CvPoint3D32f p1, p2, p3;
+    Vector3d p1, p2, p3;
     PointProjete pp1, pp2, pp3;
-    CvPoint triangleARemplir[3];
+    Vector2d triangleARemplir[3];
     float z, zbuff;
     float i1, i2, i3, ia, ib, ip, alpha, beta, gamma;
     float d1, d2, d3;
-    CvScalar couleurPixel;
 
-    Vecteur normales[500];
+    Vector3d normales[500];
     float intensites[500];
 
     //Définition lumière
     Lumiere lumiere = {0.2, 0.9, {0, 0, 1}};
 
     //Définition du centre de projection
-    CvPoint3D32f cp;
+    Vector3d cp;
     cp.x = image->width / 2;
     cp.y = image->height / 2;
     cp.z = -Z_CENTRE_PROJECTION;
@@ -103,19 +67,19 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
         face = lettre.faces[i];
 
         //Obtention des points 3D de la face
-        p1 = lettre.points[face.a];
-        p2 = lettre.points[face.b];
-        p3 = lettre.points[face.c];
+        Vector3d p1 = lettre.points[face.a];
+        Vector3d p2 = lettre.points[face.b];
+        Vector3d p3 = lettre.points[face.c];
 
         //Obtention des intensités de chaque point
-        i1 = intensites[face.a];
-        i2 = intensites[face.b];
-        i3 = intensites[face.c];
+        float i1 = intensites[face.a];
+        float i2 = intensites[face.b];
+        float i3 = intensites[face.c];
 
         //Obtention des points projetés
-        pp1 = projeter(p1, cp, i1);
-        pp2 = projeter(p2, cp, i2);
-        pp3 = projeter(p3, cp, i3);
+        PointProjete pp1 = projeter(p1, cp, i1);
+        PointProjete pp2 = projeter(p2, cp, i2);
+        PointProjete pp3 = projeter(p3, cp, i3);
 
         //Ordonnancement des projetés
         ordonnerProjetes(&pp1, &pp2, &pp3);
@@ -195,16 +159,11 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
                         ip = ia;
                     }
 
-                    //Calcul de la couleur du pixel à afficher
-                    couleurPixel = couleurAffichageGouraud(ip, materiau.couleur);
-
                     //Application de la couleur et mise à jour du zbuffer
 //                    cvSet2D(img, height - k, j, couleurPixel);
                     struct captcha3d_pixel *pixel = captcha3d_image_get(image, j, image->height - k);
-                    pixel->red = couleurPixel.val[0];
-                    pixel->green = couleurPixel.val[1];
-                    pixel->blue = couleurPixel.val[2];
-                    pixel->alpha = couleurPixel.val[3];
+
+                    *pixel = couleurAffichageGouraud(ip, materiau.couleur);
 
                     CV_MAT_ELEM(*buffer, float, j, k) = z;
                 }
@@ -225,7 +184,7 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
  * \param height Hauteur de l'image
  *
  */
-void zBuffer(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
+void zBuffer(struct captcha3d_image *image, CvMat* buffer, Lettre lettre, Materiau materiau, int width, int height)
 {
     IplImage *temp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
     cvZero(buffer);
@@ -235,33 +194,31 @@ void zBuffer(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int
     int xDebut, xFin, xLimiteG, xLimiteD;
     CvPoint3D32f p1, p2, p3;
     PointProjete pp1, pp2, pp3;
-    CvPoint triangleARemplir[3];
+    Vector2d triangleARemplir[3];
     float z, zbuff;
-    CvScalar couleurPixel;
     Lumiere lumiere = {0.2, 0.9, {0, 0, 1}};
 
     //Centre de projection
-    CvPoint3D32f cp;
+    Vector3d cp;
     cp.x = width / 2;
     cp.y = height / 2;
     cp.z = -Z_CENTRE_PROJECTION;
-
 
     for (i = 0; i < lettre.numFaces; i++) {
         cvSet(temp, cvScalar(255, 255, 255, 0), 0);
         face = lettre.faces[i];
 
-        couleurPixel = couleurAffichage(face, materiau, lumiere, lettre);
+        struct captcha3d_pixel couleurPixel = couleurAffichage(face, materiau, lumiere, lettre);
 
         //Obtention des points 3D de la face
-        p1 = lettre.points[face.a];
-        p2 = lettre.points[face.b];
-        p3 = lettre.points[face.c];
+        Vector3d p1 = lettre.points[face.a];
+        Vector3d p2 = lettre.points[face.b];
+        Vector3d p3 = lettre.points[face.c];
 
         //Obtention des points projetés
-        pp1 = projeter(p1, cp, 0);
-        pp2 = projeter(p2, cp, 0);
-        pp3 = projeter(p3, cp, 0);
+        PointProjete pp1 = projeter(p1, cp, 0);
+        PointProjete pp2 = projeter(p2, cp, 0);
+        PointProjete pp3 = projeter(p3, cp, 0);
 
         ordonnerProjetes(&pp1, &pp2, &pp3);
 
@@ -285,7 +242,8 @@ void zBuffer(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int
                 zbuff = CV_MAT_ELEM(*buffer, float, j, k);
                 //Si le z est plus petit que celui du buffer, ou que le buffer est encore à 0
                 if (z <= zbuff || zbuff == 0) {
-                    cvSet2D(img, height - k, j, couleurPixel);
+                    struct captcha3d_pixel *pixel = captcha3d_image_get(image, j, height - k);
+                    *pixel = couleurPixel; //cvSet2D(img, height - k, j, couleurPixel);
                     CV_MAT_ELEM(*buffer, float, j, k) = z;
                 }
             }
@@ -301,10 +259,11 @@ void zBuffer(IplImage *img, CvMat* buffer, Lettre lettre, Materiau materiau, int
  */
 Materiau selectionMateriau()
 {
-    Materiau materiau = {cvScalar(255, 255, 255, 0), 0.3, 0.9, 30};
-    materiau.couleur.val[0] = rand() % 256;
-    materiau.couleur.val[1] = rand() % 256;
-    materiau.couleur.val[2] = rand() % 256;
+    Materiau materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
+
+    materiau.couleur.red = rand() % 256;
+    materiau.couleur.green = rand() % 256;
+    materiau.couleur.blue = rand() % 256;
 
     return materiau;
 }
@@ -351,11 +310,11 @@ void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limit
  *
  * \return Point projeté sur l'écran
  */
-PointProjete projeter(CvPoint3D32f p, CvPoint3D32f cp, float intensite)
+PointProjete projeter(Vector3d p, Vector3d cp, float intensite)
 {
     //Equation du plan de projection z=0
     PointProjete projete;
-    CvPoint point;
+    Vector2d point;
 
     point.x = floor((p.x - cp.x) * (-cp.z) / (p.z - cp.z) + cp.x);
     point.y = floor((p.y - cp.y) * (-cp.z) / (p.z - cp.z) + cp.y);
@@ -379,7 +338,7 @@ PointProjete projeter(CvPoint3D32f p, CvPoint3D32f cp, float intensite)
  *
  * \return Profondeur du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
  */
-float profondeur(int x, int y, CvPoint3D32f a, CvPoint3D32f b, CvPoint3D32f c, CvPoint3D32f cp)
+float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
 {
     float t;
 
@@ -430,125 +389,3 @@ void echanger(PointProjete *p1, PointProjete *p2)
     (*p2).i = temp.i;
 }
 
-/**
- * \fn Lettre descriptionLettre(char c)
- * \brief Fonction qui renvoie la description d'une lettre à partir d'un caractère
- *
- * \param c Charactère dont on veut la description
- */
-Lettre descriptionLettre(char c)
-{
-    switch (c) {
-    case '9':
-        return arial[0];
-        break;
-    case '8':
-        return arial[1];
-        break;
-    case '7':
-        return arial[2];
-        break;
-    case '6':
-        return arial[3];
-        break;
-    case '5':
-        return arial[4];
-        break;
-    case '4':
-        return arial[5];
-        break;
-    case '3':
-        return arial[6];
-        break;
-    case '2':
-        return arial[7];
-        break;
-    case '1':
-        return arial[8];
-        break;
-    case '0':
-        return arial[9];
-        break;
-    case 'z':
-        return arial[10];
-        break;
-    case 'y':
-        return arial[11];
-        break;
-    case 'x':
-        return arial[12];
-        break;
-    case 'w':
-        return arial[13];
-        break;
-    case 'v':
-        return arial[14];
-        break;
-    case 'u':
-        return arial[15];
-        break;
-    case 't':
-        return arial[16];
-        break;
-    case 's':
-        return arial[17];
-        break;
-    case 'r':
-        return arial[18];
-        break;
-    case 'q':
-        return arial[19];
-        break;
-    case 'p':
-        return arial[20];
-        break;
-    case 'o':
-        return arial[21];
-        break;
-    case 'n':
-        return arial[22];
-        break;
-    case 'm':
-        return arial[23];
-        break;
-    case 'l':
-        return arial[24];
-        break;
-    case 'k':
-        return arial[25];
-        break;
-    case 'j':
-        return arial[26];
-        break;
-    case 'i':
-        return arial[27];
-        break;
-    case 'h':
-        return arial[28];
-        break;
-    case 'g':
-        return arial[29];
-        break;
-    case 'f':
-        return arial[30];
-        break;
-    case 'e':
-        return arial[31];
-        break;
-    case 'd':
-        return arial[32];
-        break;
-    case 'c':
-        return arial[33];
-        break;
-    case 'b':
-        return arial[34];
-        break;
-    case 'a':
-        return arial[35];
-        break;
-    default:
-        printf("defaut");
-        return arial[36];
-    }
-}

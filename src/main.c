@@ -9,6 +9,7 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include "captcha3d.h"
 #include "file.h"
 #include "data.h"
 #include "zbuffer.h"
@@ -85,9 +86,6 @@ int main(int argc, char *argv[])
     //Seed pour nombbres aléatoires
     srand(time(NULL)*getpid());
 
-    // Génération de la couleur des lettres
-    CvScalar couleur = couleurAleatoire();
-
 //    // Affichage du fond d'écran
 //    if (cfg_degrade == 1) {
 //        degrade(img, width, height, couleur);
@@ -96,7 +94,7 @@ int main(int argc, char *argv[])
 //    }
 
     // Lancement du Z-Buffer
-    generer(image, config.string, couleur);
+    captcha3d_generate(image, config.string, couleurAleatoire());
 
 //    // Redimensionnement à la taille voulue
 //    if (config.aliasing > 0) {
