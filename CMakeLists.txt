@@ -8,7 +8,6 @@ set(SOURCE_FILES
     src/transformations.c
     src/file.c
     src/arial.c
-    src/param.c
 )
 
 set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")

@@ -8,7 +8,6 @@
 #include "zbuffer.h"
 #include "transformations.h"
 #include "illumination.h"
-#include "param.h"
 
 static Materiau selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
@@ -24,11 +23,9 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Lettre lettre,
     Face face;
     int i, j, k;
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
-    Vector3d p1, p2, p3;
-    PointProjete pp1, pp2, pp3;
     Vector2d triangleARemplir[3];
     float z, zbuff;
-    float i1, i2, i3, ia, ib, ip, alpha, beta, gamma;
+    float ia, ib, ip, alpha, beta, gamma;
     float d1, d2, d3;
 
     Vector3d normales[500];

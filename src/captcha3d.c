@@ -1,5 +1,4 @@
 #include "captcha3d.h"
-#include "param.h"
 #include "zbuffer.h"
 #include "data.h"
 #include "arial.h"

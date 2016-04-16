@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include "data.h"
-#include "param.h"
 #include "transformations.h"
 
 /**
@@ -52,10 +51,10 @@ Lettre transformation(Lettre lettre, int i, int width, int height, int z, int ma
     Vector3d translate;
     float angle1, angle2, angle3;
 
-    // Déformation
-    if (cfg_deform_sin) {
-        lettre = deformation_sin(lettre, 'h');
-    }
+//    // Déformation
+//    if (cfg_deform_sin) {
+//        lettre = deformation_sin(lettre, 'h');
+//    }
 
     // Mise à l'échelle de la lettre
     lettre = echelle(lettre, e) ;

@@ -15,7 +15,6 @@
 #include "zbuffer.h"
 #include "transformations.h"
 #include "illumination.h"
-#include "param.h"
 
 const char *argp_program_version = "Captcha 3D v1.0.0";
 static char doc[] = "A fast and simple 3D Captcha generator.";
@@ -70,11 +69,6 @@ int main(int argc, char *argv[])
         config.width = config.height * strlen(config.string) * 2 / 3;
     }
 
-    // Vérification des paramètres
-//    if (!checkParams(argc, argv)) {
-//        return EXIT_FAILURE;
-//    }
-
     // Création de l'image
     const int width = (100 + config.aliasing) * config.width / 100;
     const int height = (100 + config.aliasing) * config.height / 100;
@@ -85,13 +79,6 @@ int main(int argc, char *argv[])
 
     //Seed pour nombbres aléatoires
     srand(time(NULL)*getpid());
-
-//    // Affichage du fond d'écran
-//    if (cfg_degrade == 1) {
-//        degrade(img, width, height, couleur);
-//    } else {
-//        cvSet(img, cfg_background, 0);
-//    }
 
     // Lancement du Z-Buffer
     captcha3d_generate(image, config.string, couleurAleatoire());
