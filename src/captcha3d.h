@@ -11,6 +11,10 @@ struct captcha3d_config {
     size_t aliasing;
 };
 
+/**
+ * @brief Generate a captcha according to the given configuration.
+ * @param config    A configuration set
+ */
 void captcha3d_generate(struct captcha3d_config *config);
 
 #endif
