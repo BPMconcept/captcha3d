@@ -11,7 +11,6 @@
 void captcha3d_generate(struct Configuration *config)
 {
     struct Image *image = captcha3d_image_allocate(config->width, config->height);
-    struct zBufferData *buffer = z_buffer_data_allocate(image);
 
     struct Color background = {255, 255, 255, 255};
     captcha3d_image_fill(image, background);
@@ -29,6 +28,7 @@ void captcha3d_generate(struct Configuration *config)
     //Sélection d'un matériau aléatoire pour la lettre
     //materiau=selectionMateriau();
 
+    #pragma omp parallel for
     for (i = 0; i < strlen(config->string); i++) {
         // Copy a new letter from the given template
         Letter letter = *get_letter(FONT_ARIAL, config->string[i]);
@@ -37,14 +37,15 @@ void captcha3d_generate(struct Configuration *config)
         letter_transform(&letter, i, image->width, image->height, z, marge, e, offset);
 
         // Run the Z-buffer algorithm
+        struct zBufferData *buffer = z_buffer_data_allocate(image);
         z_buffer_run(buffer, &letter, materiau);
+        z_buffer_data_release(buffer);
     }
 
     // Save the image
     save_png(config, image);
 
-    // Release structures
-    z_buffer_data_release(buffer);
+    // Release structure
     captcha3d_image_release(image);
 }
 
