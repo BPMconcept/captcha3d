@@ -2,21 +2,11 @@
 #define DATA_H_INCLUDED
 
 #include "captcha3d.h"
+#include "vector.h"
 
 #define Z_PROJECTION_CENTER 			600
 #define DEFORMATION_SIN_AMPLITUDE		0.5
 #define DEFORMATION_SIN_PERIOD			3.5
-
-typedef struct {
-    float x;
-    float y;
-    float z;
-} Vector3d;
-
-typedef struct {
-    float x;
-    float y;
-} Vector2d;
 
 typedef struct {
     int a;
@@ -25,9 +15,9 @@ typedef struct {
 } Triangle;
 
 typedef struct {
-    int numPoints;
+    size_t pointsNumber;
     Vector3d points[500];
-    int numFaces;
+    size_t facesNumber;
     Triangle faces[800];
 } Letter;
 

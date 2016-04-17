@@ -9,6 +9,7 @@ set(SOURCE_FILES
     src/file.c
     src/image.c
     src/font.c
+    src/vector.c
 )
 
 set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")

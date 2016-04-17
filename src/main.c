@@ -65,27 +65,19 @@ int main(int argc, char *argv[])
     }
 
     // Création de l'image
-    const int width = (100 + config.aliasing) * config.width / 100;
-    const int height = (100 + config.aliasing) * config.height / 100;
-
-    struct captcha3d_color background = {255, 255, 255, 255};
-    struct captcha3d_image *image = captcha3d_image_init(width, height);
-    captcha3d_image_fill(image, background);
+//    const int width = (100 + config.aliasing) * config.width / 100;
+//    const int height = (100 + config.aliasing) * config.height / 100;
 
     //Seed pour nombbres aléatoires
     srand(time(NULL)*getpid());
 
     // Lancement du Z-Buffer
-    captcha3d_generate(image, config.string, randomColor());
+    captcha3d_generate(&config);
 
 //    // Redimensionnement à la taille voulue
 //    if (config.aliasing > 0) {
 //        cvResize(img, img_final, CV_INTER_LINEAR);
 //    }
-
-    save_png(&config, image);
-
-    captcha3d_image_release(image);
 
     return EXIT_SUCCESS;
 }

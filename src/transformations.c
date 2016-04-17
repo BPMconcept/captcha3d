@@ -49,7 +49,7 @@ void parametresTransformation(float *z, int *marge, float *e, float *offset, int
  *
  * \return Lettre transformée
  */
-Letter transformation(Letter lettre, int i, int width, int height, int z, int marge, float e, float offset)
+void letter_transform(Letter *letter, int i, int width, int height, int z, int marge, float e, float offset)
 {
     Vector3d translate;
     float angle1, angle2, angle3;
@@ -60,7 +60,7 @@ Letter transformation(Letter lettre, int i, int width, int height, int z, int ma
 //    }
 
     // Mise à l'échelle de la lettre
-    lettre = echelle(lettre, e) ;
+    scale(letter, e) ;
 
     // Rotation de la lettre
     angle1 = (float) 1.5 * rand() / RAND_MAX - 0.75;
@@ -69,16 +69,14 @@ Letter transformation(Letter lettre, int i, int width, int height, int z, int ma
 
     //Rotation aléatoire
     Vector3d angles = {angle1, angle2, angle3} ;
-    lettre = rotation(lettre, angles);
+    letter_rotate(letter, angles);
 
     // Translation de la lettre
     translate = calculterTranslation(width, height, marge, z);
 
     //On décale la lettre de i fois le offset
     translate.x += offset * i;
-    lettre = translation(lettre, translate);
-
-    return lettre;
+    letter_translate(letter, translate);
 }
 
 /**
@@ -118,51 +116,26 @@ float calculOffsetX(float z, int width, int marge)
     return (float) width / 2 - (fabs(z) + Z_PROJECTION_CENTER) / Z_PROJECTION_CENTER * (width / 2 - marge);
 }
 
-/**
- * \fn Lettre translation(Lettre lettre,Vecteur vecteur)
- * \brief Translate une lettre dans l'espace
- *
- * \param lettre Lettre à translater
- * \param vecteur Vecteur de translation
- *
- * \return Lettre translatée
- */
-Letter translation(Letter lettre, Vector3d vecteur)
+void letter_translate(Letter *letter, Vector3d vector)
 {
-    Letter lettreTranslatee = lettre;
-    int i;
-    for (i = 0; i < lettre.numPoints; i++) {
-        lettreTranslatee.points[i].x += vecteur.x;
-        lettreTranslatee.points[i].y += vecteur.y;
-        lettreTranslatee.points[i].z += vecteur.z;
-        if (lettreTranslatee.points[i].z < 0) {
-            fprintf(stdout, "\n*********************\nTraversée de l'écran !\n*********************\n\n");
+    for (size_t i = 0; i < letter->pointsNumber; i++) {
+        letter->points[i].x += vector.x;
+        letter->points[i].y += vector.y;
+        letter->points[i].z += vector.z;
+
+        if (letter->points[i].z < 0) {
+            fprintf(stdout, "Warning: a letter is crossing the screen !\n");
         }
     }
-
-    return lettreTranslatee;
 }
 
-/**
- * \fn Lettre echelle(Lettre lettre, float coeff)
- * \brief Modifie les dimensions d'une lettre suivant un facteur coeef
- *
- * \param lettre Lettre dont il faut modifier les dimensions
- * \param coeff Coefficient de multiplication des dimensions
- *
- * \return Lettre mise à l'échelle
- */
-Letter echelle(Letter lettre, float coeff)
+void scale(Letter *letter, float coeff)
 {
-    Letter lettreRedimensionnee = lettre;
-    int i;
-    for (i = 0; i < lettre.numPoints; i++) {
-        lettreRedimensionnee.points[i].x *= coeff;
-        lettreRedimensionnee.points[i].y *= coeff;
-        lettreRedimensionnee.points[i].z *= coeff;
+    for (int i = 0; i < letter->pointsNumber; i++) {
+        letter->points[i].x *= coeff;
+        letter->points[i].y *= coeff;
+        letter->points[i].z *= coeff;
     }
-
-    return lettreRedimensionnee;
 }
 
 /**
@@ -178,15 +151,15 @@ Vector3d barycentre(Letter lettre)
     int i;
     Vector3d barycentre = {0, 0, 0};
 
-    for (i = 0; i < lettre.numPoints; i++) {
+    for (i = 0; i < lettre.pointsNumber; i++) {
         barycentre.x += lettre.points[i].x;
         barycentre.y += lettre.points[i].y;
         barycentre.z += lettre.points[i].z;
     }
 
-    barycentre.x /= lettre.numPoints;
-    barycentre.y /= lettre.numPoints;
-    barycentre.z /= lettre.numPoints;
+    barycentre.x /= lettre.pointsNumber;
+    barycentre.y /= lettre.pointsNumber;
+    barycentre.z /= lettre.pointsNumber;
 
     return barycentre;
 }
@@ -206,7 +179,7 @@ Letter deformation(Letter lettre)
     unsigned int b;
     Vector3d p;
 
-    for (i = 0; i < lettre.numPoints; i++) {
+    for (i = 0; i < lettre.pointsNumber; i++) {
         b = rand () % 2;
         p = lettre.points[i];
 
@@ -238,7 +211,7 @@ Letter deformation_sin(Letter lettre, char type)
     int i;
     Vector3d p;
 
-    for (i = 0; i < lettre.numPoints; i++) {
+    for (i = 0; i < lettre.pointsNumber; i++) {
         p = lettre.points[i];
 
         if (type == 'v') {
@@ -253,54 +226,26 @@ Letter deformation_sin(Letter lettre, char type)
     return lettre;
 }
 
-/**
- * \fn Lettre rotation(Lettre lettre,Vecteur angles)
- * \brief Rotation sur les 3 axes d'une lettre
- *
- * \param lettre Lettre sur laquelle on applique la rotation
- * \param angles Vecteur contenant les 3 angles selon x, y et z
- *
- * \return 	Lettre ayant subie la rotation
- */
-Letter rotation(Letter lettre, Vector3d angles)
+void letter_rotate(Letter *letter, Vector3d angles)
 {
-    Letter lettreRot = lettre;
-
-    // Initialisation des matrices
     Vector3d rotx[3] = {{1, 0, 0}, {0, cos(angles.x), -sin(angles.x)}, {0, sin(angles.x), cos(angles.x)}} ;
     Vector3d roty[3] = {{cos(angles.y), 0, sin(angles.y)}, {0, 1, 0}, { -sin(angles.y), 0, cos(angles.y)}} ;
     Vector3d rotz[3] = {{cos(angles.z), -sin(angles.z), 0}, {sin(angles.z), cos(angles.z), 0}, {0, 0, 1}} ;
 
-    int i;
-    for (i = 0; i < lettre.numPoints; i++) {
-        // Rotation sur x
-        lettreRot.points[i] = appliquerMatrice(rotx, lettreRot.points[i]) ;
-
-        // Rotation sur y
-        lettreRot.points[i] = appliquerMatrice(roty, lettreRot.points[i]) ;
-
-        // Rotation sur z
-        lettreRot.points[i] = appliquerMatrice(rotz, lettreRot.points[i]) ;
+    for (int i = 0; i < letter->pointsNumber; i++) {
+        letter->points[i] = letter_apply_matrix(rotx, letter->points[i]) ;
+        letter->points[i] = letter_apply_matrix(roty, letter->points[i]) ;
+        letter->points[i] = letter_apply_matrix(rotz, letter->points[i]) ;
     }
-
-    return lettreRot;
 }
 
-/**
- * \fn Vecteur appliquerMatrice(Vecteur m[3], Vecteur q)
- * \brief Fonction qui calcule l'image d'un vecteur par une matrice
- *
- * \param m[3]	Matrice à appliquer
- * \param q Vecteur sur lequel on applique la matrice
- *
- * \return 	Point 3d
- */
-Vector3d appliquerMatrice(Vector3d m[3], Vector3d q)
+Vector3d letter_apply_matrix(Vector3d m[3], Vector3d q)
 {
     Vector3d p = {
         p.x = m[0].x * q.x + m[1].x * q.y + m[2].x * q.z ,
         p.y = m[0].y * q.x + m[1].y * q.y + m[2].y * q.z ,
         p.z = m[0].z * q.x + m[1].z * q.y + m[2].z * q.z
-    } ;
-    return p ;
+    };
+
+    return p;
 }

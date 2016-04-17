@@ -3,6 +3,10 @@
 
 #include "data.h"
 
-extern const Letter arial[37];
+enum Captcha3dFont {
+    FONT_ARIAL
+};
+
+const Letter* get_letter(enum Captcha3dFont font, char letter);
 
 #endif

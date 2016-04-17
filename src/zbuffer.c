@@ -11,12 +11,12 @@
 
 static Material selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
-static Projection projeter(Vector3d p, Vector3d cp, float intensite);
+static Projection projeter(const Vector3d *p, const Vector3d *cp, float compute_light_intensity);
 static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp);
 static void ordonnerProjetes(Projection *p1, Projection *p2, Projection *p3);
 static void echanger(Projection *p1, Projection *p2);
 
-void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre, Material materiau)
+void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter, Material materiau)
 {
     IplImage *temp = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
 
@@ -41,29 +41,29 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre,
     cp.z = -Z_PROJECTION_CENTER;
 
     // Calcul des normales aux points
-    normalesAuxPoints(normales, lettre);
+    compute_normal_vectors(normales, letter);
 
     // Calcul de l'intensité aux points
-    intensiteAuxPoints(intensites, normales, lettre, lumiere, materiau);
+    compute_light_intensity(intensites, normales, letter, lumiere, materiau);
 
-    for (i = 0; i < lettre.numFaces; i++) {
+    for (i = 0; i < letter->facesNumber; i++) {
         cvSet(temp, cvScalar(255, 255, 255, 0), 0);
-        face = lettre.faces[i];
+        const Triangle *face = &letter->faces[i];
 
         //Obtention des points 3D de la face
-        Vector3d p1 = lettre.points[face.a];
-        Vector3d p2 = lettre.points[face.b];
-        Vector3d p3 = lettre.points[face.c];
+        const Vector3d *p1 = &letter->points[face->a];
+        const Vector3d *p2 = &letter->points[face->b];
+        const Vector3d *p3 = &letter->points[face->c];
 
         //Obtention des intensités de chaque point
-        float i1 = intensites[face.a];
-        float i2 = intensites[face.b];
-        float i3 = intensites[face.c];
+        float i1 = intensites[face->a];
+        float i2 = intensites[face->b];
+        float i3 = intensites[face->c];
 
         //Obtention des points projetés
-        Projection pp1 = projeter(p1, cp, i1);
-        Projection pp2 = projeter(p2, cp, i2);
-        Projection pp3 = projeter(p3, cp, i3);
+        Projection pp1 = projeter(p1, &cp, i1);
+        Projection pp2 = projeter(p2, &cp, i2);
+        Projection pp3 = projeter(p3, &cp, i3);
 
         //Ordonnancement des projetés
         ordonnerProjetes(&pp1, &pp2, &pp3);
@@ -97,7 +97,7 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre,
 
             for (j = xDebut; j <= xFin; j++) {
                 //Calcul de la profondeur du point dans l'espace correspondant
-                z = profondeur(j, k, p1, p2, p3, cp);
+                z = profondeur(j, k, *p1, *p2, *p3, cp);
                 //Récupération de la valeur du zbuffer
                 zbuff = CV_MAT_ELEM(*buffer, float, j, k);
 
@@ -215,14 +215,13 @@ void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limit
  *
  * \return Point projeté sur l'écran
  */
-Projection projeter(Vector3d p, Vector3d cp, float intensite)
+Projection projeter(const Vector3d *p, const Vector3d *cp, float intensite)
 {
-    //Equation du plan de projection z=0
     Projection projete;
     Vector2d point;
 
-    point.x = floor((p.x - cp.x) * (-cp.z) / (p.z - cp.z) + cp.x);
-    point.y = floor((p.y - cp.y) * (-cp.z) / (p.z - cp.z) + cp.y);
+    point.x = floor((p->x - cp->x) * (-cp->z) / (p->z - cp->z) + cp->x);
+    point.y = floor((p->y - cp->y) * (-cp->z) / (p->z - cp->z) + cp->y);
 
     projete.p = point;
     projete.i = intensite;

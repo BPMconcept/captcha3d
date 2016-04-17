@@ -6,6 +6,6 @@
 
 #include <opencv/cv.h>
 
-void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre, Material materiau);
+void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter, Material materiau);
 
 #endif

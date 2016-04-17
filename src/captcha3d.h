@@ -11,6 +11,6 @@ struct captcha3d_config {
     size_t aliasing;
 };
 
-void captcha3d_generate(struct captcha3d_image *image, const char *string, struct captcha3d_color couleur);
+void captcha3d_generate(struct captcha3d_config *config);
 
 #endif

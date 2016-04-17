@@ -7,6 +7,8 @@
 
 #define max(a,b) (a>=b?a:b)
 
+static float intensite(Light lumiere, Material materiau, Vector3d normale);
+
 struct captcha3d_color randomColor()
 {
     struct captcha3d_color couleur;
@@ -46,12 +48,12 @@ struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_col
  * \param lettre Lettre en cours
  * \return Couleur pour Gouraud
  */
-struct captcha3d_color couleurAffichage(Triangle face, Material materiau, Light lumiere, Letter lettre)
+struct captcha3d_color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter)
 {
     struct captcha3d_color color;
     float coeff;
-    Vector3d normale = normaleFace(face, lettre.points);
-    coeff = intensite(lettre, lumiere, materiau, normale);
+    Vector3d normale = face_normal_vector(face, letter->points);
+    coeff = intensite(lumiere, materiau, normale);
 
     color.red = coeff * materiau.couleur.red <= 255 ? coeff * materiau.couleur.red : 255;
     color.green = coeff * materiau.couleur.green <= 255 ? coeff * materiau.couleur.green : 255;
@@ -60,26 +62,14 @@ struct captcha3d_color couleurAffichage(Triangle face, Material materiau, Light 
     return color;
 }
 
-/**
- * \fn void intensiteAuxPoints(float tab[], Vecteur normales[], Lettre lettre, Lumiere lumiere, Materiau materiau)
- * \brief Calcul des intensités aux points d'une lettre pour le modèle de Gouraud
- *
- * \param tab[] Contiendra les intensités
- * \param normales[] Contient les vecteurs normaux
- * \param lettre Lettre en cours
- * \param lumiere Lumière de l'environnement
- * \param materiau Matériau de la lettre
- */
-void intensiteAuxPoints(float tab[], Vector3d normales[], Letter lettre, Light lumiere, Material materiau)
+void compute_light_intensity(float tab[], Vector3d normales[], const Letter *letter, Light lumiere, Material material)
 {
-    Vector3d lux = normaliser(lumiere.direction);
-    int i;
+    Vector3d lux = normalize(&lumiere.direction);
     float angleDiffus;
 
-    //Calcul de l'intensité à chaque point de la lettre
-    for (i = 0; i < lettre.numPoints; i++) {
+    for (size_t i = 0; i < letter->pointsNumber; i++) {
         angleDiffus = max(0, angleDiffusion(lux, normales[i]));
-        tab[i] = ((lumiere.ia) * (materiau.ka) + (lumiere.ip) * (materiau.kd) * angleDiffus) / ((lumiere.ip) + (lumiere.ia));
+        tab[i] = ((lumiere.ia) * (material.ka) + (lumiere.ip) * (material.kd) * angleDiffus) / ((lumiere.ip) + (lumiere.ia));
     }
 }
 
@@ -92,9 +82,9 @@ void intensiteAuxPoints(float tab[], Vector3d normales[], Letter lettre, Light l
  * \param materiau Matériau de la lettre
  * \param normale Vecteur normal
  */
-float intensite(Letter lettre, Light lumiere, Material materiau, Vector3d normale)
+float intensite(Light lumiere, Material materiau, Vector3d normale)
 {
-    Vector3d lux = normaliser(lumiere.direction);
+    Vector3d lux = normalize(&lumiere.direction);
     float angleDiffus;
 
     //Calcul de l'intensité à chaque point de la lettre
@@ -111,21 +101,20 @@ float intensite(Letter lettre, Light lumiere, Material materiau, Vector3d normal
  * \param points[] Tableau de points
  * \return Vecteur normal
  */
-Vector3d normaleFace(Triangle face, Vector3d points[])
+Vector3d face_normal_vector(const Triangle *face, const Vector3d points[])
 {
     Vector3d n;
-    Vector3d p1, p2, p3;
 
-    p1 = points[face.a];
-    p2 = points[face.b];
-    p3 = points[face.c];
+    const Vector3d *p1 = &points[face->a];
+    const Vector3d *p2 = &points[face->b];
+    const Vector3d *p3 = &points[face->c];
 
     //Calcul du produit vectoriel pour avoir la normale
-    n.x = -((p2.y - p1.y) * (p3.z - p1.z) - (p2.z - p1.z) * (p3.y - p1.y));
-    n.y = -((p2.z - p1.z) * (p3.x - p1.x) - (p2.x - p1.x) * (p3.z - p1.z));
-    n.z = -((p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x));
+    n.x = -((p2->y - p1->y) * (p3->z - p1->z) - (p2->z - p1->z) * (p3->y - p1->y));
+    n.y = -((p2->z - p1->z) * (p3->x - p1->x) - (p2->x - p1->x) * (p3->z - p1->z));
+    n.z = -((p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x));
 
-    return normaliser(n);
+    return normalize(&n);
 }
 
 /**
@@ -143,73 +132,30 @@ float angleDiffusion(Vector3d L, Vector3d N)
 }
 
 /**
- * \fn Vecteur normaliser(Vecteur vecteur)
- * \brief Normalise un vecteur
- *
- * \param vecteur Vecteur à normaliser
- * \return vecteur normalisé
- */
-Vector3d normaliser(Vector3d vecteur)
-{
-    Vector3d vecteurNormal = vecteur;
-    float norme;
-    norme = sqrt((vecteur.x) * (vecteur.x) + (vecteur.y) * (vecteur.y) + (vecteur.z) * (vecteur.z));
-
-    vecteurNormal.x /= norme;
-    vecteurNormal.y /= norme;
-    vecteurNormal.z /= norme;
-
-    return vecteurNormal;
-}
-
-/**
  * \fn void normalesAuxPoints(Vecteur tab[],Lettre lettre)
  * \brief Fonction qui calcule les normales à chaque points de la lettre
  *
  * \param tab Tableau qui recevra les normales
  * \param lettre Lettre pour laquelle il faut calculer les normales
  */
-void normalesAuxPoints(Vector3d tab[], Letter lettre)
+void compute_normal_vectors(Vector3d tab[], const Letter *letter)
 {
-    Vector3d n;
     Triangle face;
-    int i;
-    initialiserTableauNormales(tab, lettre.numPoints);
+    initialiserTableauNormales(tab, letter->pointsNumber);
 
-    for (i = 0; i < lettre.numFaces; i++) {
-        face = lettre.faces[i];
-        //Calcul de la normale à la face
-        n = normaleFace(lettre.faces[i], lettre.points);
+    for (size_t i = 0; i < letter->facesNumber; i++) {
+        face = letter->faces[i];
 
-        //Ajout de cette normale à chacun des points de la face
-        tab[face.a] = additionerVecteurs(tab[face.a], n);
-        tab[face.b] = additionerVecteurs(tab[face.b], n);
-        tab[face.c] = additionerVecteurs(tab[face.c], n);
+        Vector3d normal = face_normal_vector(&letter->faces[i], letter->points);
 
+        tab[face.a] = vector_add(&tab[face.a], &normal);
+        tab[face.b] = vector_add(&tab[face.b], &normal);
+        tab[face.c] = vector_add(&tab[face.c], &normal);
     }
 
-    //On normalise les normales
-    for (i = 0; i < lettre.numPoints; i++) {
-        tab[i] = normaliser(tab[i]);
+    for (size_t i = 0; i < letter->pointsNumber; i++) {
+        tab[i] = normalize(&tab[i]);
     }
-}
-
-/**
- * \fn Vecteur additionerVecteurs(Vecteur n1, Vecteur n2)
- * \brief Aditionne deux vecteurs
- *
- * \param n1 Premier vecteur à additioner
- * \param n2 Deuxième vecteur à additioner
- * \return Vecteur total
- */
-Vector3d additionerVecteurs(Vector3d n1, Vector3d n2)
-{
-    Vector3d n;
-    n.x = n1.x + n2.x;
-    n.y = n1.y + n2.y;
-    n.z = n1.z + n2.z;
-
-    return n;
 }
 
 /**
