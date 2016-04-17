@@ -1,13 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <argp.h>
 #include <stdbool.h>
-
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 
 #include "captcha3d.h"
 #include "file.h"
@@ -81,7 +76,7 @@ int main(int argc, char *argv[])
     srand(time(NULL)*getpid());
 
     // Lancement du Z-Buffer
-    captcha3d_generate(image, config.string, couleurAleatoire());
+    captcha3d_generate(image, config.string, randomColor());
 
 //    // Redimensionnement à la taille voulue
 //    if (config.aliasing > 0) {

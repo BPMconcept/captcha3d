@@ -1,5 +1,5 @@
 #ifndef ZBUFFER_H_INCLUDED
-#define ZBUFFER_INCLUDED
+#define ZBUFFER_H_INCLUDED
 
 #include "data.h"
 

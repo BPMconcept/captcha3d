@@ -3,15 +3,9 @@
 
 #include "captcha3d.h"
 
-#define Z_CENTRE_PROJECTION 			600
-#define PI					3.14159
+#define Z_PROJECTION_CENTER 			600
 #define DEFORMATION_SIN_AMPLITUDE		0.5
-#define DEFORMATION_SIN_PERIODE			3.5
-#define MAX_STR_LEN				5
-#define CHAR_AUTH 				"abcdefghijklmnopqrstuvwxyz0123456789"
-
-#define max(a,b) (a>=b?a:b)
-#define min(a,b) (a<=b?a:b)
+#define DEFORMATION_SIN_PERIOD			3.5
 
 typedef struct {
     float x;

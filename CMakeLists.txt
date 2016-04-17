@@ -7,7 +7,8 @@ set(SOURCE_FILES
     src/illumination.c
     src/transformations.c
     src/file.c
-    src/arial.c
+    src/image.c
+    src/font.c
 )
 
 set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")

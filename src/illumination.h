@@ -3,8 +3,7 @@
 
 #include "data.h"
 
-void degrade(IplImage *img, int width, int height, CvScalar couleurHaute);
-struct captcha3d_color couleurAleatoire();
+struct captcha3d_color randomColor();
 void intensiteAuxPoints(float tab[], Vector3d normales[], Letter lettre, Light lumiere, Material materiau);
 Vector3d normaliser(Vector3d vecteur);
 float angleDiffusion(Vector3d L, Vector3d N);

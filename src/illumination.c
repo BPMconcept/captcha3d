@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <opencv/cv.h>
 #include <math.h>
 
 #include "data.h"
@@ -8,42 +7,7 @@
 
 #define max(a,b) (a>=b?a:b)
 
-/**
- * \fn void degrade(IplImage *img, int width, int height, CvScalar couleurHaute)
- * \brief Affiche un fond d'écran dégardé sur l'image en paramètre
- *
- * \param img Image à modifier
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- * \param couleurHaute Couleur du texte
- */
-void degrade(IplImage *img, int width, int height, CvScalar couleurHaute)
-{
-    int i, j, amplitude = 200;
-    CvScalar couleurBasse = cvScalar(0, 0, 0, 0), couleurInter = cvScalar(0, 0, 0, 255);
-
-    couleurBasse.val[0] = min(max(couleurHaute.val[0] + (rand() % amplitude - amplitude / 2), 0), 255);
-    couleurBasse.val[1] = min(max(couleurHaute.val[1] + (rand() % amplitude - amplitude / 2), 0), 255);
-    couleurBasse.val[2] = min(max(couleurHaute.val[2] + (rand() % amplitude - amplitude / 2), 0), 255);
-    couleurBasse.val[3] = couleurHaute.val[3];
-
-    for (i = 0; i < height; i++) {
-        couleurInter.val[0] = couleurHaute.val[0] + i * (couleurBasse.val[0] - couleurHaute.val[0]) / (height - 1);
-        couleurInter.val[1] = couleurHaute.val[1] + i * (couleurBasse.val[1] - couleurHaute.val[1]) / (height - 1);
-        couleurInter.val[2] = couleurHaute.val[2] + i * (couleurBasse.val[2] - couleurHaute.val[2]) / (height - 1);
-
-        for (j = 0; j < width; j++) {
-            cvSet2D(img, i, j, couleurInter);
-        }
-    }
-}
-
-/**
- * \fn CvScalar couleurAleatoire()
- * \brief Retourne une couleur aléatoire
- *
- */
-struct captcha3d_color couleurAleatoire()
+struct captcha3d_color randomColor()
 {
     struct captcha3d_color couleur;
 

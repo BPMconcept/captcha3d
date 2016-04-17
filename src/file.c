@@ -33,10 +33,6 @@ void save_png(struct captcha3d_config *config, struct captcha3d_image *image)
     );
     png_write_info(png, info);
 
-    // To remove the alpha channel for PNG_COLOR_TYPE_RGB format,
-    // Use png_set_filler().
-    //png_set_filler(png, 0, PNG_FILLER_AFTER);
-
     png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * config->height);
 
     for (int y=0; y<config->height; y++) {

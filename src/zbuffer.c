@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 
-#include "data.h"
-#include "arial.h"
 #include "zbuffer.h"
+#include "data.h"
 #include "transformations.h"
 #include "illumination.h"
+
+#define max(a,b) (a>=b?a:b)
+#define min(a,b) (a<=b?a:b)
 
 static Material selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
@@ -38,7 +38,7 @@ void zBufferGouraud(struct captcha3d_image *image, CvMat* buffer, Letter lettre,
     Vector3d cp;
     cp.x = image->width / 2;
     cp.y = image->height / 2;
-    cp.z = -Z_CENTRE_PROJECTION;
+    cp.z = -Z_PROJECTION_CENTER;
 
     // Calcul des normales aux points
     normalesAuxPoints(normales, lettre);

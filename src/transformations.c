@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <opencv/cv.h>
 #include <math.h>
 
 #include "data.h"
 #include "transformations.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 /**
  * \fn void parametresTransformation(float *z,int *marge,float *e, float *offset,int height, int width,int nbLettres)
@@ -26,9 +29,9 @@ void parametresTransformation(float *z, int *marge, float *e, float *offset, int
     //Marge horizontale par rapport aux bords
     *marge = (int) height * 0.8 * 1.2 / 2 + 10 * width / 400;
     //Echelle de grandeur de la lettre
-    *e = (float) (Z_CENTRE_PROJECTION + (*z)) / Z_CENTRE_PROJECTION * height * 0.8 / 2. / 6.;
+    *e = (float) (Z_PROJECTION_CENTER + (*z)) / Z_PROJECTION_CENTER * height * 0.8 / 2. / 6.;
     //Offset entre chaque lettre
-    *offset = (float) ((width - 2 * (*marge)) / (nbLettres - 1)) * (Z_CENTRE_PROJECTION + fabs(*z)) / Z_CENTRE_PROJECTION;
+    *offset = (float) ((width - 2 * (*marge)) / (nbLettres - 1)) * (Z_PROJECTION_CENTER + fabs(*z)) / Z_PROJECTION_CENTER;
 }
 
 /**
@@ -112,8 +115,7 @@ Vector3d calculterTranslation(int width, int height, int marge, float z)
  */
 float calculOffsetX(float z, int width, int marge)
 {
-    return (float) width / 2 - (fabs(z) + Z_CENTRE_PROJECTION) / Z_CENTRE_PROJECTION * (width / 2 - marge);
-
+    return (float) width / 2 - (fabs(z) + Z_PROJECTION_CENTER) / Z_PROJECTION_CENTER * (width / 2 - marge);
 }
 
 /**
@@ -240,9 +242,9 @@ Letter deformation_sin(Letter lettre, char type)
         p = lettre.points[i];
 
         if (type == 'v') {
-            p.y += DEFORMATION_SIN_AMPLITUDE * sin((2 * PI) / DEFORMATION_SIN_PERIODE * p.x);
+            p.y += DEFORMATION_SIN_AMPLITUDE * sin((2 * M_PI) / DEFORMATION_SIN_PERIOD * p.x);
         } else {
-            p.x += DEFORMATION_SIN_AMPLITUDE * sin((2 * PI) / DEFORMATION_SIN_PERIODE * p.y);
+            p.x += DEFORMATION_SIN_AMPLITUDE * sin((2 * M_PI) / DEFORMATION_SIN_PERIOD * p.y);
         }
 
         lettre.points[i] = p;
