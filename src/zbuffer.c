@@ -111,9 +111,9 @@ static Material selectionMateriau()
 static void ligne(int *xDebut, int *xFin, struct Image *temp, int y, int limite1, int limite2)
 {
     for (int x = limite1; x <= limite2; x++) {
-        struct Color *couleurRemplissage = captcha3d_image_get(temp, x, y);
+        const struct Color *color= captcha3d_image_get(temp, x, y);
 
-        if (couleurRemplissage->red == 0 && couleurRemplissage->green == 0 && couleurRemplissage->blue == 0) {
+        if (color->red == 0 && color->green == 0 && color->blue == 0) {
             if (*xDebut == -1) {
                 *xDebut = x;
             } else {
@@ -218,9 +218,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
 {
     struct Image *temp = buffer->temporary;
 
-    struct Color white = {255, 255, 255, 255};
     struct Color black = {0, 0, 0, 255};
-
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
     float ia, ib, ip, alpha, beta, gamma;
     float d1, d2, d3;
@@ -244,7 +242,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
     compute_light_intensity(intensites, normales, letter, lumiere, materiau);
 
     for (int i = 0; i < letter->facesNumber; i++) {
-        captcha3d_image_fill(temp, white);
+        captcha3d_image_reset(temp);
         const Triangle *face = &letter->faces[i];
 
         //Obtention des points 3D de la face

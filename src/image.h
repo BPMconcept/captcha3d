@@ -22,7 +22,13 @@ struct Image {
 struct Image* captcha3d_image_allocate(size_t width, size_t height);
 
 /**
- * @brief Fill an image with the given color.
+ * @brief Empty the image, equivalent to fill in white but faster.
+ * @param image     Image resource
+ */
+void captcha3d_image_reset(struct Image *image);
+
+/**
+ * @brief Fill the image with the given color.
  * @param image     Image resource
  * @param color     Color to use
  */

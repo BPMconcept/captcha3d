@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "image.h"
 
 struct Image* captcha3d_image_allocate(size_t width, size_t height)
@@ -10,20 +12,23 @@ struct Image* captcha3d_image_allocate(size_t width, size_t height)
     return image;
 }
 
-void captcha3d_image_release(struct Image *image)
+void captcha3d_image_reset(struct Image *image)
 {
-    free(image);
+    memset(image->data, 255, sizeof(struct Color) * image->width * image->height);
 }
 
 void captcha3d_image_fill(struct Image *image, struct Color color)
 {
-    for (int x = 0; x < image->width; ++x) {
-        for (int y = 0; y < image->height; ++y) {
-            struct Color *pixel = captcha3d_image_get(image, x, y);
-            pixel->red = color.red;
-            pixel->green = color.green;
-            pixel->blue = color.blue;
-            pixel->alpha = color.alpha;
+    struct Color *pointer = image->data;
+
+    for (size_t x = 0; x < image->width; ++x) {
+        for (size_t y = 0; y < image->height; ++y) {
+            *pointer++ = color;
         }
     }
+}
+
+void captcha3d_image_release(struct Image *image)
+{
+    free(image);
 }
