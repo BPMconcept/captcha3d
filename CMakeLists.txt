@@ -24,4 +24,4 @@ add_custom_target(
     COMMAND astyle --style=kr --add-brackets --pad-oper --pad-header ${CMAKE_SOURCE_DIR}/src/*
 )
 
-target_link_libraries(launcher captcha3d m png opencv_core opencv_highgui opencv_imgproc)
+target_link_libraries(launcher captcha3d m png)

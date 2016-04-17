@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <float.h>
+#include <math.h>
 
 #include "zbuffer.h"
 #include "data.h"
 #include "transformations.h"
 #include "illumination.h"
-
-#include "opencv/cv.h"
 
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
@@ -108,15 +108,12 @@ static Material selectionMateriau()
  * \param limite1 limite gauche de recherche
  * \param limite2 limite droite de recherche
  */
-static void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limite2)
+static void ligne(int *xDebut, int *xFin, struct Image *temp, int y, int limite1, int limite2)
 {
-    int x;
-    CvScalar couleurRemplissage;
+    for (int x = limite1; x <= limite2; x++) {
+        struct Color *couleurRemplissage = captcha3d_image_get(temp, x, y);
 
-    for (x = limite1; x <= limite2; x++) {
-        couleurRemplissage = cvGet2D(temp, y, x);
-
-        if (couleurRemplissage.val[0] == 0 && couleurRemplissage.val[1] == 0 && couleurRemplissage.val[2] == 0) {
+        if (couleurRemplissage->red == 0 && couleurRemplissage->green == 0 && couleurRemplissage->blue == 0) {
             if (*xDebut == -1) {
                 *xDebut = x;
             } else {
@@ -129,12 +126,102 @@ static void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, in
     }
 }
 
+static void scan_line(Vector2d contour[], int x1, int y1, int x2, int y2)
+{
+    int sx, sy, dx1, dy1, dx2, dy2, x, y, m, n, k, cnt;
+
+    sx = x2 - x1;
+    sy = y2 - y1;
+
+    if (sx > 0) {
+        dx1 = 1;
+    } else if (sx < 0) {
+        dx1 = -1;
+    } else {
+        dx1 = 0;
+    }
+
+    if (sy > 0) {
+        dy1 = 1;
+    } else if (sy < 0) {
+        dy1 = -1;
+    } else {
+        dy1 = 0;
+    }
+
+    m = abs(sx);
+    n = abs(sy);
+    dx2 = dx1;
+    dy2 = 0;
+
+    if (m < n) {
+        m = abs(sy);
+        n = abs(sx);
+        dx2 = 0;
+        dy2 = dy1;
+    }
+
+    x = x1;
+    y = y1;
+    cnt = m + 1;
+    k = n / 2;
+
+    while (cnt--) {
+        if (y >= 0) {
+            if (x < contour[y].x) {
+                contour[y].x = x;
+            }
+            if (x > contour[y].y) {
+                contour[y].y = x;
+            }
+        }
+
+        k += n;
+        if (k < m) {
+            x += dx2;
+            y += dy2;
+        } else {
+            k -= m;
+            x += dx1;
+            y += dy1;
+        }
+    }
+}
+
+static void fill_triangle(struct Image *image, struct Color color, Vector2d p1, Vector2d p2, Vector2d p3)
+{
+    Vector2d contour[image->height];
+
+    for (size_t y = 0; y < image->height; y++) {
+        contour[y].x = FLT_MAX;
+        contour[y].y = FLT_MIN;
+    }
+
+    scan_line(contour, p1.x, p1.y, p2.x, p2.y);
+    scan_line(contour, p2.x, p2.y, p3.x, p3.y);
+    scan_line(contour, p3.x, p3.y, p1.x, p1.y);
+
+    for (size_t y = 0; y < image->height; y++) {
+        if (contour[y].y >= contour[y].x) {
+            int x = contour[y].x;
+            int len = 1 + contour[y].y - contour[y].x;
+
+            while (len--) {
+                struct Color *point = captcha3d_image_get(image, x++, y);
+                *point = color;
+            }
+        }
+    }
+}
+
 void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material materiau)
 {
-    IplImage *temp = cvCreateImage(cvSize(buffer->image->width, buffer->image->height), IPL_DEPTH_8U, 3);
+    struct Image *temp = captcha3d_image_allocate(buffer->image->width, buffer->image->height);
+
+    struct Color white = {255, 255, 255, 255};
+    struct Color black = {0, 0, 0, 255};
 
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
-    Vector2d triangleARemplir[3];
     float ia, ib, ip, alpha, beta, gamma;
     float d1, d2, d3;
 
@@ -156,8 +243,8 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
     // Calcul de l'intensité aux points
     compute_light_intensity(intensites, normales, letter, lumiere, materiau);
 
-    for (size_t i = 0; i < letter->facesNumber; i++) {
-        cvSet(temp, cvScalar(255, 255, 255, 0), 0);
+    for (int i = 0; i < letter->facesNumber; i++) {
+        captcha3d_image_fill(temp, white);
         const Triangle *face = &letter->faces[i];
 
         //Obtention des points 3D de la face
@@ -178,12 +265,8 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
         //Ordonnancement des projetés
         sort_projection(&pp1, &pp2, &pp3);
 
-        triangleARemplir[0] = pp1.p;
-        triangleARemplir[1] = pp2.p;
-        triangleARemplir[2] = pp3.p;
-
         //Remplissage du triangle
-        cvFillConvexPoly(temp, triangleARemplir, 3, CV_RGB(0, 0, 0), 8, 0);
+        fill_triangle(temp, black, pp1.p, pp2.p, pp3.p);
 
         //Détermination de la boite englobant le triangle
         xLimiteG = min(min(pp1.p.x, pp2.p.x), pp3.p.x);
@@ -196,7 +279,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
             xMilieu = pp2.p.x;
         }
 
-        for (size_t k = pp1.p.y; k <= pp3.p.y; k++) {
+        for (int k = pp1.p.y; k <= pp3.p.y; k++) {
             xDebut = -1;
             xFin = -1;
             //Calcul des bornes de la ligne
@@ -205,7 +288,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
             int xLimBeta = (pp2.p.x > xMilieu) ? xFin : xDebut;
             int xLimAlpha = (pp2.p.x > xMilieu) ? xDebut : xFin;
 
-            for (size_t j = xDebut; j <= xFin; j++) {
+            for (int j = xDebut; j <= xFin; j++) {
                 //Calcul de la profondeur du point dans l'espace correspondant
                 float z = profondeur(j, k, *p1, *p2, *p3, cp);
                 //Récupération de la valeur du zbuffer
@@ -225,7 +308,6 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
                     }
 
                     ia = alpha * pp3.i + (1 - alpha) * pp1.i;
-
 
                     if (k <= pp2.p.y) {
                         //Première partie du triangle
@@ -263,11 +345,16 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
             }
         }
     }
+
+    captcha3d_image_release(temp);
 }
 
 struct zBufferData* z_buffer_data_allocate(struct Image *image)
 {
-    return calloc(sizeof(struct zBufferData) + image->width * image->height * sizeof(float), 1);
+    struct zBufferData *buffer = calloc(sizeof(struct zBufferData) + image->width * image->height * sizeof(float), 1);
+    buffer->image = image;
+
+    return buffer;
 }
 
 void z_buffer_data_release(struct zBufferData *buffer)

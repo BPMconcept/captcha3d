@@ -5,8 +5,7 @@
 #include "letter.h"
 #include "data.h"
 
-struct zBufferData
-{
+struct zBufferData {
     struct Image *image;
     float data[];
 };
