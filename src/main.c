@@ -18,9 +18,9 @@ static char args_doc[] = "[FILENAME]...";
 
 static struct argp_option options[] = {
     {"string", 's', "STRING", 0, "The set of characters used to draw the image"},
-    {"file", 'o', "captcha.png", OPTION_ARG_OPTIONAL, "The output image file"},
-    {"width", 'w', "auto", OPTION_ARG_OPTIONAL, "The output image width"},
-    {"height", 'h', "100", OPTION_ARG_OPTIONAL, "The output image height"},
+    {"file", 'o', "captcha.png", 0, "The output image file"},
+    {"width", 'w', "auto", 0, "The output image width"},
+    {"height", 'h', "100", 0, "The output image height"},
     {0}
 };
 
@@ -34,6 +34,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         break;
     case 'o':
         config->file = arg;
+        break;
+    case 'h':
+        config->height = atoi(arg);
         break;
     case ARGP_KEY_END:
         if (config->string == NULL){
