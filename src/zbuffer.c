@@ -9,12 +9,77 @@
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
 
+typedef struct {
+    Vector2d p;
+    float i;
+} Projection2d;
+
 static Material selectionMateriau();
 static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
-static Projection projeter(const Vector3d *p, const Vector3d *cp, float compute_light_intensity);
-static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp);
-static void ordonnerProjetes(Projection *p1, Projection *p2, Projection *p3);
-static void echanger(Projection *p1, Projection *p2);
+
+/**
+ * \fn float profondeur(int x,int y,CvPoint3D32f a, CvPoint3D32f b, CvPoint3D32f c, CvPoint3D32f cp)
+ * \brief Fonction qui calcul la composante z du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
+ *
+ * \param x abscisse du projeté
+ * \param y ordonnée du projeté
+ * \param a 1er point décrivant la face triangulaire
+ * \param b 2e point décrivant la face triangulaire
+ * \param c 3e point décrivant la face triangulaire
+ * \param cp centre de projection
+ *
+ * \return Profondeur du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
+ */
+static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
+{
+    float t;
+
+    t = (cp.x * a.y * c.z - cp.x * a.y * b.z - cp.x * b.y * c.z + cp.x * b.z * c.y - cp.x * a.z * c.y + cp.x * a.z * b.y - cp.y * c.x * b.z - cp.y * a.x * c.z + cp.y * b.x * c.z - cp.y * b.x * a.z + cp.y * a.x * b.z + cp.y * c.x * a.z + cp.z * a.x * c.y - cp.z * b.x * c.y + cp.z * b.x * a.y - cp.z * c.x * a.y + cp.z * c.x * b.y - cp.z * a.x * b.y + b.y * a.x * c.z - b.z * a.x * c.y + a.y * c.x * b.z - a.y * b.x * c.z + a.z * b.x * c.y - b.y * c.x * a.z)
+        /
+        (-cp.x * a.y * b.z + cp.x * a.y * c.z - cp.x * b.y * c.z + cp.x * b.z * c.y - cp.x * a.z * c.y + cp.x * a.z * b.y - cp.y * a.x * c.z + cp.y * b.x * c.z - cp.y * c.x * b.z - cp.y * b.x * a.z + cp.y * a.x * b.z + cp.y * c.x * a.z + cp.z * a.x * c.y + cp.z * c.x * b.y - cp.z * c.x * a.y - cp.z * b.x * c.y + cp.z * b.x * a.y - cp.z * a.x * b.y + x * a.y * b.z - x * a.y * c.z + x * b.y * c.z - x * b.z * c.y - x * a.z * b.y + x * a.z * c.y + c.x * b.z * y + a.x * c.z * y - b.x * c.z * y - a.x * b.z * y + b.x * a.z * y - c.x * a.z * y);
+
+    return -cp.z * t + cp.z;
+}
+
+/**
+ * \brief Fonction qui échange deux points projetés
+ *
+ * \param p1 1er point projeté que l'on veut échanger
+ * \param p2 2e point projeté que l'on veut échanger
+ */
+static void projection_swap(Projection2d *p1, Projection2d *p2)
+{
+    Projection2d temp;
+    temp.p = (*p1).p;
+    temp.i = (*p1).i;
+    (*p1).p = (*p2).p;
+    (*p1).i = (*p2).i;
+    (*p2).p = temp.p;
+    (*p2).i = temp.i;
+}
+
+/**
+ * \fn void ordonnerProjetes(PointProjete *p1,PointProjete *p2,PointProjete *p3)
+ * \brief Fonction qui trie 3 points projetés dans l'ordre croissant de leu composante y
+ *
+ * \param p1 1er point projeté à trier
+ * \param p2 2e point projeté à trier
+ * \param p3 3e point projeté à trier
+ */
+static void sort_projection(Projection2d *p1, Projection2d *p2, Projection2d *p3)
+{
+    if ((*p1).p.y > (*p2).p.y) {
+        projection_swap(p1, p2);
+    }
+
+    if ((*p2).p.y > (*p3).p.y) {
+        projection_swap(p2, p3);
+    }
+
+    if ((*p1).p.y > (*p2).p.y) {
+        projection_swap(p1, p2);
+    }
+}
 
 void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter, Material materiau)
 {
@@ -61,12 +126,12 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
         float i3 = intensites[face->c];
 
         //Obtention des points projetés
-        Projection pp1 = projeter(p1, &cp, i1);
-        Projection pp2 = projeter(p2, &cp, i2);
-        Projection pp3 = projeter(p3, &cp, i3);
+        Projection2d pp1 = {vector_project(p1, &cp), i1};
+        Projection2d pp2 = {vector_project(p2, &cp), i2};
+        Projection2d pp3 = {vector_project(p3, &cp), i3};
 
         //Ordonnancement des projetés
-        ordonnerProjetes(&pp1, &pp2, &pp3);
+        sort_projection(&pp1, &pp2, &pp3);
 
         triangleARemplir[0] = pp1.p;
         triangleARemplir[1] = pp2.p;
@@ -203,93 +268,5 @@ void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limit
     if (*xFin == -1) {
         *xFin = *xDebut;
     }
-}
-
-/**
- * \fn PointProjete projeter(CvPoint3D32f p, CvPoint3D32f cp, float intensite)
- * \brief Fonction qui renvoie le projeté sur l'écran (z=0) d'un point de l'espace associé à l'intensité de ce point
- *
- * \param p point de l'espace dont on veut le projeté
- * \param cp 2e centre de projection
- * \param intensite intensité du point de l'espace
- *
- * \return Point projeté sur l'écran
- */
-Projection projeter(const Vector3d *p, const Vector3d *cp, float intensite)
-{
-    Projection projete;
-    Vector2d point;
-
-    point.x = floor((p->x - cp->x) * (-cp->z) / (p->z - cp->z) + cp->x);
-    point.y = floor((p->y - cp->y) * (-cp->z) / (p->z - cp->z) + cp->y);
-
-    projete.p = point;
-    projete.i = intensite;
-
-    return projete;
-}
-
-/**
- * \fn float profondeur(int x,int y,CvPoint3D32f a, CvPoint3D32f b, CvPoint3D32f c, CvPoint3D32f cp)
- * \brief Fonction qui calcul la composante z du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
- *
- * \param x abscisse du projeté
- * \param y ordonnée du projeté
- * \param a 1er point décrivant la face triangulaire
- * \param b 2e point décrivant la face triangulaire
- * \param c 3e point décrivant la face triangulaire
- * \param cp centre de projection
- *
- * \return Profondeur du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
- */
-float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
-{
-    float t;
-
-    t = (cp.x * a.y * c.z - cp.x * a.y * b.z - cp.x * b.y * c.z + cp.x * b.z * c.y - cp.x * a.z * c.y + cp.x * a.z * b.y - cp.y * c.x * b.z - cp.y * a.x * c.z + cp.y * b.x * c.z - cp.y * b.x * a.z + cp.y * a.x * b.z + cp.y * c.x * a.z + cp.z * a.x * c.y - cp.z * b.x * c.y + cp.z * b.x * a.y - cp.z * c.x * a.y + cp.z * c.x * b.y - cp.z * a.x * b.y + b.y * a.x * c.z - b.z * a.x * c.y + a.y * c.x * b.z - a.y * b.x * c.z + a.z * b.x * c.y - b.y * c.x * a.z)
-        /
-        (-cp.x * a.y * b.z + cp.x * a.y * c.z - cp.x * b.y * c.z + cp.x * b.z * c.y - cp.x * a.z * c.y + cp.x * a.z * b.y - cp.y * a.x * c.z + cp.y * b.x * c.z - cp.y * c.x * b.z - cp.y * b.x * a.z + cp.y * a.x * b.z + cp.y * c.x * a.z + cp.z * a.x * c.y + cp.z * c.x * b.y - cp.z * c.x * a.y - cp.z * b.x * c.y + cp.z * b.x * a.y - cp.z * a.x * b.y + x * a.y * b.z - x * a.y * c.z + x * b.y * c.z - x * b.z * c.y - x * a.z * b.y + x * a.z * c.y + c.x * b.z * y + a.x * c.z * y - b.x * c.z * y - a.x * b.z * y + b.x * a.z * y - c.x * a.z * y);
-
-    return -cp.z * t + cp.z;
-}
-
-/**
- * \fn void ordonnerProjetes(PointProjete *p1,PointProjete *p2,PointProjete *p3)
- * \brief Fonction qui trie 3 points projetés dans l'ordre croissant de leu composante y
- *
- * \param p1 1er point projeté à trier
- * \param p2 2e point projeté à trier
- * \param p3 3e point projeté à trier
- */
-void ordonnerProjetes(Projection *p1, Projection *p2, Projection *p3)
-{
-    if ((*p1).p.y > (*p2).p.y) {
-        echanger(p1, p2);
-    }
-    if ((*p2).p.y > (*p3).p.y) {
-        echanger(p2, p3);
-    }
-    if ((*p1).p.y > (*p2).p.y) {
-        echanger(p1, p2);
-    }
-}
-
-
-/**
- * \fn void echanger(PointProjete *p1,PointProjete *p2)
- * \brief Fonction qui échange deux points projetés
- *
- * \param p1 1er point projeté que l'on veut échanger
- * \param p2 2e point projeté que l'on veut échanger
- */
-void echanger(Projection *p1, Projection *p2)
-{
-    Projection temp;
-    temp.p = (*p1).p;
-    temp.i = (*p1).i;
-    (*p1).p = (*p2).p;
-    (*p1).i = (*p2).i;
-    (*p2).p = temp.p;
-    (*p2).i = temp.i;
 }
 

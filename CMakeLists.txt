@@ -4,7 +4,6 @@ project (Captcha3D)
 set(SOURCE_FILES
     src/captcha3d.c
     src/zbuffer.c
-    src/illumination.c
     src/transformations.c
     src/file.c
     src/image.c
