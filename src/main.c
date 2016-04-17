@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <argp.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "captcha3d.h"
 #include "file.h"
@@ -25,7 +26,7 @@ static struct argp_option options[] = {
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
-    struct captcha3d_config *config = state->input;
+    struct Configuration *config = state->input;
 
     switch (key) {
     case 's':
@@ -50,7 +51,7 @@ static struct argp argp = {options, parse_opt, NULL, doc, 0, 0, 0};
 
 int main(int argc, char *argv[])
 {
-    struct captcha3d_config config;
+    struct Configuration config;
 
     config.string = NULL;
     config.file = "captcha.png";

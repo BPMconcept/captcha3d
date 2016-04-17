@@ -6,6 +6,8 @@
 #include "transformations.h"
 #include "illumination.h"
 
+#include "opencv/cv.h"
+
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
 
@@ -13,9 +15,6 @@ typedef struct {
     Vector2d p;
     float i;
 } Projection2d;
-
-static Material selectionMateriau();
-static void ligne(int *xdebut, int *xfin, IplImage *temp, int y, int limite1, int limite2);
 
 /**
  * \fn float profondeur(int x,int y,CvPoint3D32f a, CvPoint3D32f b, CvPoint3D32f c, CvPoint3D32f cp)
@@ -81,15 +80,61 @@ static void sort_projection(Projection2d *p1, Projection2d *p2, Projection2d *p3
     }
 }
 
-void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter, Material materiau)
+/**
+ * \fn Materiau selectionMateriau()
+ * \brief Renvoie un matériau de couleur aléatoire
+ *
+ * \return Materiau de couleur aléatoire
+ */
+static Material selectionMateriau()
 {
-    IplImage *temp = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
+    Material materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
 
-    Triangle face;
-    int i, j, k;
+    materiau.couleur.red = rand() % 256;
+    materiau.couleur.green = rand() % 256;
+    materiau.couleur.blue = rand() % 256;
+
+    return materiau;
+}
+
+/**
+ * \fn void ligne(int *xDebut, int *xFin, IplImage *temp,int y, int limite1, int limite2)
+ * \brief Fonction qui permet d'obtenir le début et la fin d'une ligne colorée
+ *
+ * \param xDebut abscisse du début de la ligne
+ * \param xFin abscisse de la fin de la ligne
+ * \param temp image surlaquelle est dessinée le triangle projeté
+ * \param y ordonnée à laquelle on cherche la ligne
+ * \param limite1 limite gauche de recherche
+ * \param limite2 limite droite de recherche
+ */
+static void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limite2)
+{
+    int x;
+    CvScalar couleurRemplissage;
+
+    for (x = limite1; x <= limite2; x++) {
+        couleurRemplissage = cvGet2D(temp, y, x);
+
+        if (couleurRemplissage.val[0] == 0 && couleurRemplissage.val[1] == 0 && couleurRemplissage.val[2] == 0) {
+            if (*xDebut == -1) {
+                *xDebut = x;
+            } else {
+                *xFin = x;
+            }
+        }
+    }
+    if (*xFin == -1) {
+        *xFin = *xDebut;
+    }
+}
+
+void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material materiau)
+{
+    IplImage *temp = cvCreateImage(cvSize(buffer->image->width, buffer->image->height), IPL_DEPTH_8U, 3);
+
     int xDebut, xFin, xLimiteG, xLimiteD, xMilieu;
     Vector2d triangleARemplir[3];
-    float z, zbuff;
     float ia, ib, ip, alpha, beta, gamma;
     float d1, d2, d3;
 
@@ -101,8 +146,8 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
 
     //Définition du centre de projection
     Vector3d cp;
-    cp.x = image->width / 2;
-    cp.y = image->height / 2;
+    cp.x = buffer->image->width / 2;
+    cp.y = buffer->image->height / 2;
     cp.z = -Z_PROJECTION_CENTER;
 
     // Calcul des normales aux points
@@ -111,7 +156,7 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
     // Calcul de l'intensité aux points
     compute_light_intensity(intensites, normales, letter, lumiere, materiau);
 
-    for (i = 0; i < letter->facesNumber; i++) {
+    for (size_t i = 0; i < letter->facesNumber; i++) {
         cvSet(temp, cvScalar(255, 255, 255, 0), 0);
         const Triangle *face = &letter->faces[i];
 
@@ -136,6 +181,7 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
         triangleARemplir[0] = pp1.p;
         triangleARemplir[1] = pp2.p;
         triangleARemplir[2] = pp3.p;
+
         //Remplissage du triangle
         cvFillConvexPoly(temp, triangleARemplir, 3, CV_RGB(0, 0, 0), 8, 0);
 
@@ -150,8 +196,7 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
             xMilieu = pp2.p.x;
         }
 
-
-        for (k = pp1.p.y; k <= pp3.p.y; k++) {
+        for (size_t k = pp1.p.y; k <= pp3.p.y; k++) {
             xDebut = -1;
             xFin = -1;
             //Calcul des bornes de la ligne
@@ -160,11 +205,11 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
             int xLimBeta = (pp2.p.x > xMilieu) ? xFin : xDebut;
             int xLimAlpha = (pp2.p.x > xMilieu) ? xDebut : xFin;
 
-            for (j = xDebut; j <= xFin; j++) {
+            for (size_t j = xDebut; j <= xFin; j++) {
                 //Calcul de la profondeur du point dans l'espace correspondant
-                z = profondeur(j, k, *p1, *p2, *p3, cp);
+                float z = profondeur(j, k, *p1, *p2, *p3, cp);
                 //Récupération de la valeur du zbuffer
-                zbuff = CV_MAT_ELEM(*buffer, float, j, k);
+                float zbuff = buffer->data[buffer->image->height * j + k];
 
                 //Si le z est plus petit que celui du buffer, ou que le buffer est encore à 0
                 if (z <= zbuff || zbuff == 0) {
@@ -208,65 +253,24 @@ void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter
                         ip = ia;
                     }
 
-                    //Application de la couleur et mise à jour du zbuffer
-//                    cvSet2D(img, height - k, j, couleurPixel);
-                    struct captcha3d_color *pixel = captcha3d_image_get(image, j, image->height - k);
-
+                    // Set the color for this position
+                    struct Color *pixel = captcha3d_image_get(buffer->image, j, buffer->image->height - k);
                     *pixel = couleurAffichageGouraud(ip, materiau.couleur);
 
-                    CV_MAT_ELEM(*buffer, float, j, k) = z;
+                    // Update z-buffer
+                    buffer->data[buffer->image->height * j + k] = z;
                 }
             }
         }
     }
 }
 
-/**
- * \fn Materiau selectionMateriau()
- * \brief Renvoie un matériau de couleur aléatoire
- *
- * \return Materiau de couleur aléatoire
- */
-Material selectionMateriau()
+struct zBufferData* z_buffer_data_allocate(struct Image *image)
 {
-    Material materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
-
-    materiau.couleur.red = rand() % 256;
-    materiau.couleur.green = rand() % 256;
-    materiau.couleur.blue = rand() % 256;
-
-    return materiau;
+    return calloc(sizeof(struct zBufferData) + image->width * image->height * sizeof(float), 1);
 }
 
-/**
- * \fn void ligne(int *xDebut, int *xFin, IplImage *temp,int y, int limite1, int limite2)
- * \brief Fonction qui permet d'obtenir le début et la fin d'une ligne colorée
- *
- * \param xDebut abscisse du début de la ligne
- * \param xFin abscisse de la fin de la ligne
- * \param temp image surlaquelle est dessinée le triangle projeté
- * \param y ordonnée à laquelle on cherche la ligne
- * \param limite1 limite gauche de recherche
- * \param limite2 limite droite de recherche
- */
-void ligne(int *xDebut, int *xFin, IplImage *temp, int y, int limite1, int limite2)
+void z_buffer_data_release(struct zBufferData *buffer)
 {
-    int x;
-    CvScalar couleurRemplissage;
-
-    for (x = limite1; x <= limite2; x++) {
-        couleurRemplissage = cvGet2D(temp, y, x);
-
-        if (couleurRemplissage.val[0] == 0 && couleurRemplissage.val[1] == 0 && couleurRemplissage.val[2] == 0) {
-            if (*xDebut == -1) {
-                *xDebut = x;
-            } else {
-                *xFin = x;
-            }
-        }
-    }
-    if (*xFin == -1) {
-        *xFin = *xDebut;
-    }
+    free(buffer);
 }
-

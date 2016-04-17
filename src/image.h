@@ -7,10 +7,10 @@
 
 #include "color.h"
 
-struct captcha3d_image {
+struct Image {
     size_t width;
     size_t height;
-    struct captcha3d_color data[];
+    struct Color data[];
 };
 
 /**
@@ -19,20 +19,20 @@ struct captcha3d_image {
  * @param height    Image height
  * @return Image resource
  */
-struct captcha3d_image* captcha3d_image_init(size_t width, size_t height);
+struct Image* captcha3d_image_allocate(size_t width, size_t height);
 
 /**
  * @brief Fill an image with the given color.
  * @param image     Image resource
  * @param color     Color to use
  */
-void captcha3d_image_fill(struct captcha3d_image *image, struct captcha3d_color color);
+void captcha3d_image_fill(struct Image *image, struct Color color);
 
 /**
  * @brief Deallocate a Captcha3D image structure.
  * @param image     Image resource
  */
-void captcha3d_image_release(struct captcha3d_image *image);
+void captcha3d_image_release(struct Image *image);
 
 /**
  * @brief Get a color structure at a given image position.
@@ -41,7 +41,7 @@ void captcha3d_image_release(struct captcha3d_image *image);
  * @param h         Y position (height)
  * @return A readable/writable color structure
  */
-static inline struct captcha3d_color* captcha3d_image_get(struct captcha3d_image *image, size_t w, size_t h)
+static inline struct Color* captcha3d_image_get(struct Image *image, size_t w, size_t h)
 {
     assert(w < image->width);
     assert(h < image->height);

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "captcha3d.h"
 #include "zbuffer.h"
 #include "data.h"
@@ -6,19 +8,13 @@
 #include "illumination.h"
 #include "file.h"
 
-#include <opencv/cv.h>
-
-static Letter descriptionLettre(char c);
-
-void captcha3d_generate(struct captcha3d_config *config)
+void captcha3d_generate(struct Configuration *config)
 {
-    struct captcha3d_image *image = captcha3d_image_init(config->width, config->height);
+    struct Image *image = captcha3d_image_allocate(config->width, config->height);
+    struct zBufferData *buffer = z_buffer_data_allocate(image);
 
-    struct captcha3d_color background = {255, 255, 255, 255};
+    struct Color background = {255, 255, 255, 255};
     captcha3d_image_fill(image, background);
-
-    CvMat* buffer = cvCreateMat(image->width, image->height, CV_32FC1);
-    cvZero(buffer);
 
     int i;
     Material materiau = {random_color(), 0.3, 0.9, 30};
@@ -41,20 +37,14 @@ void captcha3d_generate(struct captcha3d_config *config)
         letter_transform(&letter, i, image->width, image->height, z, marge, e, offset);
 
         // Run the Z-buffer algorithm
-        z_buffer(image, buffer, &letter, materiau);
+        z_buffer_run(buffer, &letter, materiau);
     }
 
+    // Save the image
     save_png(config, image);
+
+    // Release structures
+    z_buffer_data_release(buffer);
     captcha3d_image_release(image);
 }
 
-/**
- * \fn Lettre descriptionLettre(char c)
- * \brief Fonction qui renvoie la description d'une lettre à partir d'un caractère
- *
- * \param c Charactère dont on veut la description
- */
-Letter descriptionLettre(char c)
-{
-
-}

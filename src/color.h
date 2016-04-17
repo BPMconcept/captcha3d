@@ -10,7 +10,7 @@
 #define DEFORMATION_SIN_AMPLITUDE		0.5
 #define DEFORMATION_SIN_PERIOD			3.5
 
-struct captcha3d_color {
+struct Color {
     uint8_t red;
     uint8_t green;
     uint8_t blue;
@@ -24,18 +24,18 @@ typedef struct {
 } Light;
 
 typedef struct {
-    struct captcha3d_color couleur;
+    struct Color couleur;
     float ka;
     float kd;
     float ks;
     int n;
 } Material;
 
-struct captcha3d_color random_color();
+struct Color random_color();
 
 void compute_light_intensity(float tab[], Vector3d normales[], const Letter *letter, Light lumiere, Material materiau);
 float angleDiffusion(Vector3d L, Vector3d N);
-struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_color couleur);
-struct captcha3d_color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter);
+struct Color couleurAffichageGouraud(float coeff, struct Color couleur);
+struct Color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter);
 
 #endif

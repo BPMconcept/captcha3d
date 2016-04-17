@@ -3,6 +3,6 @@
 
 #include "captcha3d.h"
 
-void save_png(struct captcha3d_config *config, struct captcha3d_image *image);
+void save_png(struct Configuration *config, struct Image *image);
 
 #endif

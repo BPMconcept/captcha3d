@@ -1,7 +1,7 @@
 #ifndef FONT_H
 #define FONT_H
 
-enum Captcha3dFont {
+enum Font {
     FONT_ARIAL
 };
 

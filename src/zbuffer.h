@@ -5,8 +5,16 @@
 #include "letter.h"
 #include "data.h"
 
-#include <opencv/cv.h>
+struct zBufferData
+{
+    struct Image *image;
+    float data[];
+};
 
-void z_buffer(struct captcha3d_image *image, CvMat* buffer, const Letter *letter, Material materiau);
+struct zBufferData* z_buffer_data_allocate(struct Image *image);
+
+void z_buffer_data_release(struct zBufferData *buffer);
+
+void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material materiau);
 
 #endif

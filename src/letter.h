@@ -19,7 +19,7 @@ typedef struct {
     Triangle faces[800];
 } Letter;
 
-const Letter* get_letter(enum Captcha3dFont font, char letter);
+const Letter* get_letter(enum Font font, char letter);
 
 void letter_translate(Letter *lettre, Vector3d vector);
 void letter_rotate(Letter *letter, Vector3d angles);

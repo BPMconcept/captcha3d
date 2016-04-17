@@ -10,9 +10,9 @@
 
 static float intensite(Light lumiere, Material materiau, Vector3d normale);
 
-struct captcha3d_color random_color()
+struct Color random_color()
 {
-    struct captcha3d_color couleur;
+    struct Color couleur;
 
     couleur.red = rand() % 256;
     couleur.green = rand() % 256;
@@ -30,7 +30,7 @@ struct captcha3d_color random_color()
  * \param couleur Couleur initiale
  * \return Couleur pour Gouraud
  */
-struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_color couleur)
+struct Color couleurAffichageGouraud(float coeff, struct Color couleur)
 {
     couleur.red = coeff * couleur.red <= 255 ? coeff * couleur.red : 255;
     couleur.green = coeff * couleur.green <= 255 ? coeff * couleur.green : 255;
@@ -49,9 +49,9 @@ struct captcha3d_color couleurAffichageGouraud(float coeff, struct captcha3d_col
  * \param lettre Lettre en cours
  * \return Couleur pour Gouraud
  */
-struct captcha3d_color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter)
+struct Color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter)
 {
-    struct captcha3d_color color;
+    struct Color color;
     float coeff;
     Vector3d normale = face_normal_vector(face, letter->points);
     coeff = intensite(lumiere, materiau, normale);

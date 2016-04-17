@@ -3,7 +3,7 @@
 
 #include "image.h"
 
-struct captcha3d_config {
+struct Configuration {
     char *string;
     char *file;
     size_t width;
@@ -15,6 +15,6 @@ struct captcha3d_config {
  * @brief Generate a captcha according to the given configuration.
  * @param config    A configuration set
  */
-void captcha3d_generate(struct captcha3d_config *config);
+void captcha3d_generate(struct Configuration *config);
 
 #endif

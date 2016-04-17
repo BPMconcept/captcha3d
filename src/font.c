@@ -258,7 +258,7 @@ static const Letter arial[37] = {
     {0, {}, 0, {}}
 };
 
-const Letter* get_letter(enum Captcha3dFont font, char letter)
+const Letter* get_letter(enum Font font, char letter)
 {
     switch (letter) {
     case '9':
