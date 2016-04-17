@@ -216,7 +216,7 @@ static void fill_triangle(struct Image *image, struct Color color, Vector2d p1, 
 
 void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material materiau)
 {
-    struct Image *temp = captcha3d_image_allocate(buffer->image->width, buffer->image->height);
+    struct Image *temp = buffer->temporary;
 
     struct Color white = {255, 255, 255, 255};
     struct Color black = {0, 0, 0, 255};
@@ -345,19 +345,19 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
             }
         }
     }
-
-    captcha3d_image_release(temp);
 }
 
 struct zBufferData* z_buffer_data_allocate(struct Image *image)
 {
     struct zBufferData *buffer = calloc(sizeof(struct zBufferData) + image->width * image->height * sizeof(float), 1);
     buffer->image = image;
+    buffer->temporary = captcha3d_image_allocate(image->width, image->height);
 
     return buffer;
 }
 
 void z_buffer_data_release(struct zBufferData *buffer)
 {
+    captcha3d_image_release(buffer->temporary);
     free(buffer);
 }

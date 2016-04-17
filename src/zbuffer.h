@@ -7,6 +7,7 @@
 
 struct zBufferData {
     struct Image *image;
+    struct Image *temporary;
     float data[];
 };
 
