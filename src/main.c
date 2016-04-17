@@ -39,7 +39,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         config->height = atoi(arg);
         break;
     case ARGP_KEY_END:
-        if (config->string == NULL){
+        if (config->string == NULL) {
             argp_usage(state);
         }
         return 0;

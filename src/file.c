@@ -7,15 +7,23 @@
 void save_png(struct Configuration *config, struct Image *image)
 {
     FILE *fp = fopen(config->file, "wb");
-    if(!fp) abort();
+    if (!fp) {
+        abort();
+    }
 
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) abort();
+    if (!png) {
+        abort();
+    }
 
     png_infop info = png_create_info_struct(png);
-    if (!info) abort();
+    if (!info) {
+        abort();
+    }
 
-    if (setjmp(png_jmpbuf(png))) abort();
+    if (setjmp(png_jmpbuf(png))) {
+        abort();
+    }
 
     png_init_io(png, fp);
 
@@ -35,7 +43,7 @@ void save_png(struct Configuration *config, struct Image *image)
 
     png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * config->height);
 
-    for (int y=0; y<config->height; y++) {
+    for (int y = 0; y < config->height; y++) {
         row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png, info));
     }
 
@@ -43,7 +51,7 @@ void save_png(struct Configuration *config, struct Image *image)
         png_byte *row = row_pointers[y];
 
         for (int x = 0; x < config->width; ++x) {
-            png_byte* byte = &(row[x*4]);
+            png_byte* byte = &(row[x * 4]);
             struct Color *pixel = captcha3d_image_get(image, x, y);
             byte[0] = pixel->red;
             byte[1] = pixel->green;
