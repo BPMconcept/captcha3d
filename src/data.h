@@ -9,19 +9,6 @@
 #define DEFORMATION_SIN_PERIOD			3.5
 
 typedef struct {
-    int a;
-    int b;
-    int c;
-} Triangle;
-
-typedef struct {
-    size_t pointsNumber;
-    Vector3d points[500];
-    size_t facesNumber;
-    Triangle faces[800];
-} Letter;
-
-typedef struct {
     float ia;
     float ip;
     Vector3d direction;

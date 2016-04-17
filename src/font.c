@@ -1,4 +1,5 @@
 #include "font.h"
+#include "letter.h"
 
 static const Letter arial[37] = {
 //TRI9

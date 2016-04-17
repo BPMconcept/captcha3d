@@ -21,7 +21,7 @@ void captcha3d_generate(struct captcha3d_config *config)
     cvZero(buffer);
 
     int i;
-    Material materiau = {randomColor(), 0.3, 0.9, 30};
+    Material materiau = {random_color(), 0.3, 0.9, 30};
 
     //Paramètres pour le placement des lettres dans l'espace
     float z, e, offset;

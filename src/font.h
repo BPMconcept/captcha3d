@@ -1,12 +1,8 @@
-#ifndef ARIAL_H
-#define ARIAL_H
-
-#include "data.h"
+#ifndef FONT_H
+#define FONT_H
 
 enum Captcha3dFont {
     FONT_ARIAL
 };
-
-const Letter* get_letter(enum Captcha3dFont font, char letter);
 
 #endif

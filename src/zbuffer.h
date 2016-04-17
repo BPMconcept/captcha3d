@@ -1,7 +1,8 @@
-#ifndef ZBUFFER_H_INCLUDED
-#define ZBUFFER_INCLUDED
+#ifndef ZBUFFER_H
+#define ZBUFFER_H
 
 #include "captcha3d.h"
+#include "letter.h"
 #include "data.h"
 
 #include <opencv/cv.h>

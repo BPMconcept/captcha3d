@@ -1,5 +1,5 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef CAPTCHA3D_VECTOR_H
+#define CAPTCHA3D_VECTOR_H
 
 typedef struct {
     float x;

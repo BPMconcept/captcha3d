@@ -5,12 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-struct captcha3d_color {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t alpha;
-};
+#include "color.h"
 
 struct captcha3d_image {
     size_t width;
