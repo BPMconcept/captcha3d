@@ -7,8 +7,6 @@
 #include "letter.h"
 
 #define Z_PROJECTION_CENTER 			600
-#define DEFORMATION_SIN_AMPLITUDE		0.5
-#define DEFORMATION_SIN_PERIOD			3.5
 
 struct Color {
     uint8_t red;
@@ -31,11 +29,8 @@ typedef struct {
     int n;
 } Material;
 
-struct Color random_color();
-
-void compute_light_intensity(float tab[], Vector3d normales[], const Letter *letter, Light lumiere, Material materiau);
-float angleDiffusion(Vector3d L, Vector3d N);
-struct Color couleurAffichageGouraud(float coeff, struct Color couleur);
-struct Color couleurAffichage(const Triangle *face, Material materiau, Light lumiere, const Letter *letter);
+struct Color color_random();
+struct Color color_gouraud(float coeff, struct Color couleur);
+void color_light_intensity(float tab[], Vector3d normales[], const Letter *letter, Light lumiere, Material materiau);
 
 #endif

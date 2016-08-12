@@ -116,7 +116,7 @@ void compute_normal_vectors(Vector3d tab[], const Letter *letter)
     }
 
     for (size_t i = 0; i < letter->pointsNumber; i++) {
-        tab[i] = normalize(&tab[i]);
+        tab[i] = vector_normalize(&tab[i]);
     }
 }
 
@@ -132,5 +132,5 @@ Vector3d face_normal_vector(const Triangle *face, const Vector3d points[])
     n.y = -((p2->z - p1->z) * (p3->x - p1->x) - (p2->x - p1->x) * (p3->z - p1->z));
     n.z = -((p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x));
 
-    return normalize(&n);
+    return vector_normalize(&n);
 }

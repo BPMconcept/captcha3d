@@ -5,7 +5,6 @@
 
 #include "zbuffer.h"
 #include "data.h"
-#include "transformations.h"
 #include "illumination.h"
 
 #define max(a,b) (a>=b?a:b)
@@ -180,7 +179,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
     cp.z = -Z_PROJECTION_CENTER;
 
     compute_normal_vectors(normales, letter);
-    compute_light_intensity(intensites, normales, letter, lumiere, materiau);
+    color_light_intensity(intensites, normales, letter, lumiere, materiau);
 
     for (size_t i = 0; i < letter->facesNumber; i++) {
         captcha3d_image_reset(temp);
@@ -273,7 +272,7 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
 
                     // Set the color for this position
                     struct Color *pixel = captcha3d_image_get(buffer->image, j, buffer->image->height - k);
-                    *pixel = couleurAffichageGouraud(ip, materiau.couleur);
+                    *pixel = color_gouraud(ip, materiau.couleur);
 
                     // Update z-buffer
                     buffer->data[buffer->image->height * j + k] = z;

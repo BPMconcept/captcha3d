@@ -12,7 +12,7 @@ typedef struct {
     float y;
 } Vector2d;
 
-Vector3d normalize(const Vector3d *vector);
+Vector3d vector_normalize(const Vector3d *vector);
 Vector3d vector_add(const Vector3d *n1, const Vector3d *n2);
 Vector2d vector_project(const Vector3d *p, const Vector3d *cp);
 

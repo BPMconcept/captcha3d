@@ -10,7 +10,6 @@ endif()
 add_library(captcha3d STATIC
     lib/captcha3d.c
     lib/zbuffer.c
-    lib/transformations.c
     lib/file.c
     lib/image.c
     lib/font.c

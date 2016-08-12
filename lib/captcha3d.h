@@ -10,6 +10,7 @@ struct Configuration {
     size_t height;
     size_t aliasing;
     struct Color background;
+    unsigned int seed;
 };
 
 /**

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     struct Configuration config = {
         .string = NULL,
         .file = "captcha.png",
+        .seed = time(NULL) * getpid(),
         .width = 0,
         .height = 100,
         .background = {
@@ -65,10 +66,6 @@ int main(int argc, char *argv[])
         config.width = config.height * strlen(config.string) * 2 / 3;
     }
 
-    //Seed pour nombbres aléatoires
-    srand(time(NULL)*getpid());
-
-    // Lancement du Z-Buffer
     captcha3d_generate(&config);
 
     return EXIT_SUCCESS;
