@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 
-static void initialiserTableauNormales(Vector3d tab[], int taille)
+static void initialize_normal_vector(Vector3d array[], int size)
 {
     Vector3d nul;
     int i;
@@ -13,8 +13,8 @@ static void initialiserTableauNormales(Vector3d tab[], int taille)
     nul.y = 0;
     nul.z = 0;
 
-    for (i = 0; i < taille; i++) {
-        tab[i] = nul;
+    for (i = 0; i < size; i++) {
+        array[i] = nul;
     }
 }
 
@@ -29,37 +29,16 @@ static Vector3d letter_apply_matrix(Vector3d m[3], Vector3d q)
     return p;
 }
 
-/**
- * \fn float calculOffsetX(float z,int width, int marge)
- * \brief Calcul la distance entre deux lettres dans l'espace
- *
- * \param z Profondeur où sont placées les lettres
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- *
- * \return Offset
- */
-static float calculOffsetX(float z, int width, int marge)
+static float distance_letter(float z, int width, int marge)
 {
     return (float) width / 2 - (fabs(z) + Z_PROJECTION_CENTER) / Z_PROJECTION_CENTER * (width / 2 - marge);
 }
 
-/**
- * \fn Vecteur calculterTranslation(int width, int height,int marge,float z)
- * \brief Calcul le vecteur de translation pour bien placer la lettre dans l'espace
- *
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- * \param marge Marge sur les bords horizontaux
- * \param z Profondeur où placer les lettres
- *
- * \return Vecteur de translation
- */
-static Vector3d calculterTranslation(int width, int height, int marge, float z)
+static Vector3d compute_translation(int width, int height, int marge, float z)
 {
     Vector3d translate;
 
-    translate.x = calculOffsetX(z, width, marge);
+    translate.x = distance_letter(z, width, marge);
     translate.y = height / 2;
     translate.z = z;
 
@@ -101,47 +80,22 @@ void letter_scale(Letter *letter, float coeff)
     }
 }
 
-/**
- * \fn Lettre transformation(Lettre lettre, int i, int width, int height,int z,int marge,float e, float offset)
- * \brief Transforme une lettre : échelle, rotation, translation adéquates
- *
- * \param lettre Letter originale à transformer
- * \param i Numéro de la lettre à afficher
- * \param width Largeur de l'image
- * \param height Hauteur de l'image
- * \param z Profondeur où placer les lettres
- * \param marge Marge sur les bords horizontaux
- * \param e Echelle de la transformation
- * \param offset Distance entre chaque lettre
- *
- * \return Lettre transformée
- */
 void letter_transform(Letter *letter, int i, int width, int height, int z, int marge, float e, float offset)
 {
     Vector3d translate;
     float angle1, angle2, angle3;
 
-//    // Déformation
-//    if (cfg_deform_sin) {
-//        lettre = deformation_sin(lettre, 'h');
-//    }
-
-    // Mise à l'échelle de la lettre
     letter_scale(letter, e) ;
 
-    // Rotation de la lettre
     angle1 = (float) 1.5 * rand() / RAND_MAX - 0.75;
     angle2 = (float) 1.5 * rand() / RAND_MAX - 0.75;
     angle3 = (float) 1.5 * rand() / RAND_MAX - 0.75;
 
-    //Rotation aléatoire
     Vector3d angles = {angle1, angle2, angle3} ;
     letter_rotate(letter, angles);
 
-    // Translation de la lettre
-    translate = calculterTranslation(width, height, marge, z);
+    translate = compute_translation(width, height, marge, z);
 
-    //On décale la lettre de i fois le offset
     translate.x += offset * i;
     letter_translate(letter, translate);
 }
@@ -149,7 +103,7 @@ void letter_transform(Letter *letter, int i, int width, int height, int z, int m
 void compute_normal_vectors(Vector3d tab[], const Letter *letter)
 {
     Triangle face;
-    initialiserTableauNormales(tab, letter->pointsNumber);
+    initialize_normal_vector(tab, letter->pointsNumber);
 
     for (size_t i = 0; i < letter->facesNumber; i++) {
         face = letter->faces[i];
@@ -174,7 +128,6 @@ Vector3d face_normal_vector(const Triangle *face, const Vector3d points[])
     const Vector3d *p2 = &points[face->b];
     const Vector3d *p3 = &points[face->c];
 
-    //Calcul du produit vectoriel pour avoir la normale
     n.x = -((p2->y - p1->y) * (p3->z - p1->z) - (p2->z - p1->z) * (p3->y - p1->y));
     n.y = -((p2->z - p1->z) * (p3->x - p1->x) - (p2->x - p1->x) * (p3->z - p1->z));
     n.z = -((p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x));

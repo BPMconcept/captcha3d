@@ -16,20 +16,8 @@ typedef struct {
     float i;
 } Projection2d;
 
-/**
- * \fn float profondeur(int x,int y,CvPoint3D32f a, CvPoint3D32f b, CvPoint3D32f c, CvPoint3D32f cp)
- * \brief Fonction qui calcul la composante z du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
- *
- * \param x abscisse du projeté
- * \param y ordonnée du projeté
- * \param a 1er point décrivant la face triangulaire
- * \param b 2e point décrivant la face triangulaire
- * \param c 3e point décrivant la face triangulaire
- * \param cp centre de projection
- *
- * \return Profondeur du point appartenant au triangle définit par les points a,b et c, et dont le projeté est en (x,y) sur l'écran
- */
-static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
+
+static float depth(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector3d cp)
 {
     float t;
 
@@ -40,12 +28,6 @@ static float profondeur(int x, int y, Vector3d a, Vector3d b, Vector3d c, Vector
     return -cp.z * t + cp.z;
 }
 
-/**
- * \brief Fonction qui échange deux points projetés
- *
- * \param p1 1er point projeté que l'on veut échanger
- * \param p2 2e point projeté que l'on veut échanger
- */
 static void projection_swap(Projection2d *p1, Projection2d *p2)
 {
     Projection2d temp;
@@ -57,14 +39,6 @@ static void projection_swap(Projection2d *p1, Projection2d *p2)
     (*p2).i = temp.i;
 }
 
-/**
- * \fn void ordonnerProjetes(PointProjete *p1,PointProjete *p2,PointProjete *p3)
- * \brief Fonction qui trie 3 points projetés dans l'ordre croissant de leu composante y
- *
- * \param p1 1er point projeté à trier
- * \param p2 2e point projeté à trier
- * \param p3 3e point projeté à trier
- */
 static void sort_projection(Projection2d *p1, Projection2d *p2, Projection2d *p3)
 {
     if ((*p1).p.y > (*p2).p.y) {
@@ -80,35 +54,7 @@ static void sort_projection(Projection2d *p1, Projection2d *p2, Projection2d *p3
     }
 }
 
-/**
- * \fn Materiau selectionMateriau()
- * \brief Renvoie un matériau de couleur aléatoire
- *
- * \return Materiau de couleur aléatoire
- */
-static Material selectionMateriau()
-{
-    Material materiau = {{255, 255, 255, 255}, 0.3, 0.9, 30};
-
-    materiau.couleur.red = rand() % 256;
-    materiau.couleur.green = rand() % 256;
-    materiau.couleur.blue = rand() % 256;
-
-    return materiau;
-}
-
-/**
- * \fn void ligne(int *xDebut, int *xFin, IplImage *temp,int y, int limite1, int limite2)
- * \brief Fonction qui permet d'obtenir le début et la fin d'une ligne colorée
- *
- * \param xDebut abscisse du début de la ligne
- * \param xFin abscisse de la fin de la ligne
- * \param temp image surlaquelle est dessinée le triangle projeté
- * \param y ordonnée à laquelle on cherche la ligne
- * \param limite1 limite gauche de recherche
- * \param limite2 limite droite de recherche
- */
-static void ligne(int *xDebut, int *xFin, struct Image *temp, int y, int limite1, int limite2)
+static void line(int *xDebut, int *xFin, struct Image *temp, int y, int limite1, int limite2)
 {
     for (int x = limite1; x <= limite2; x++) {
         const struct Color *color= captcha3d_image_get(temp, x, y);
@@ -226,36 +172,28 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
     Vector3d normales[500];
     float intensites[500];
 
-    //Définition lumière
     Light lumiere = {0.2, 0.9, {0, 0, 1}};
 
-    //Définition du centre de projection
     Vector3d cp;
     cp.x = buffer->image->width / 2;
     cp.y = buffer->image->height / 2;
     cp.z = -Z_PROJECTION_CENTER;
 
-    // Calcul des normales aux points
     compute_normal_vectors(normales, letter);
-
-    // Calcul de l'intensité aux points
     compute_light_intensity(intensites, normales, letter, lumiere, materiau);
 
-    for (int i = 0; i < letter->facesNumber; i++) {
+    for (size_t i = 0; i < letter->facesNumber; i++) {
         captcha3d_image_reset(temp);
         const Triangle *face = &letter->faces[i];
 
-        //Obtention des points 3D de la face
         const Vector3d *p1 = &letter->points[face->a];
         const Vector3d *p2 = &letter->points[face->b];
         const Vector3d *p3 = &letter->points[face->c];
 
-        //Obtention des intensités de chaque point
         float i1 = intensites[face->a];
         float i2 = intensites[face->b];
         float i3 = intensites[face->c];
 
-        //Obtention des points projetés
         Projection2d pp1 = {vector_project(p1, &cp), i1};
         Projection2d pp2 = {vector_project(p2, &cp), i2};
         Projection2d pp3 = {vector_project(p3, &cp), i3};
@@ -281,14 +219,14 @@ void z_buffer_run(struct zBufferData *buffer, const Letter *letter, Material mat
             xDebut = -1;
             xFin = -1;
             //Calcul des bornes de la ligne
-            ligne(&xDebut, &xFin, temp, k, xLimiteG, xLimiteD);
+            line(&xDebut, &xFin, temp, k, xLimiteG, xLimiteD);
 
             int xLimBeta = (pp2.p.x > xMilieu) ? xFin : xDebut;
             int xLimAlpha = (pp2.p.x > xMilieu) ? xDebut : xFin;
 
             for (int j = xDebut; j <= xFin; j++) {
                 //Calcul de la profondeur du point dans l'espace correspondant
-                float z = profondeur(j, k, *p1, *p2, *p3, cp);
+                float z = depth(j, k, *p1, *p2, *p3, cp);
                 //Récupération de la valeur du zbuffer
                 float zbuff = buffer->data[buffer->image->height * j + k];
 

@@ -25,16 +25,6 @@ Vector3d vector_add(const Vector3d *n1, const Vector3d *n2)
     return n;
 }
 
-/**
- * \fn PointProjete projeter(CvPoint3D32f p, CvPoint3D32f cp, float intensite)
- * \brief Fonction qui renvoie le projeté sur l'écran (z=0) d'un point de l'espace associé à l'intensité de ce point
- *
- * \param p point de l'espace dont on veut le projeté
- * \param cp 2e centre de projection
- * \param intensite intensité du point de l'espace
- *
- * \return Point projeté sur l'écran
- */
 Vector2d vector_project(const Vector3d *p, const Vector3d *cp)
 {
     Vector2d projection;

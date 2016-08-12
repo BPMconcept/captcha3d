@@ -12,10 +12,8 @@ void captcha3d_generate(struct Configuration *config)
 {
     struct Image *image = captcha3d_image_allocate(config->width, config->height);
 
-    struct Color background = {255, 255, 255, 255};
-    captcha3d_image_fill(image, background);
+    captcha3d_image_fill(image, config->background);
 
-    int i;
     Material materiau = {random_color(), 0.3, 0.9, 30};
 
     //Paramètres pour le placement des lettres dans l'espace
@@ -26,10 +24,10 @@ void captcha3d_generate(struct Configuration *config)
     parametresTransformation(&z, &marge, &e, &offset, image->height, image->width, strlen(config->string));
 
     //Sélection d'un matériau aléatoire pour la lettre
-    //materiau=selectionMateriau();
+//    materiau=selectionMateriau();
 
     #pragma omp parallel for
-    for (i = 0; i < strlen(config->string); i++) {
+    for (size_t i = 0; i < strlen(config->string); i++) {
         // Copy a new letter from the given template
         Letter letter = *get_letter(FONT_ARIAL, config->string[i]);
 

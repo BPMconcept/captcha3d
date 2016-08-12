@@ -9,6 +9,7 @@ struct Configuration {
     size_t width;
     size_t height;
     size_t aliasing;
+    struct Color background;
 };
 
 /**
