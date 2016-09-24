@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         .width = 0,
         .height = 100,
         .background = {
-            .red = 0, .green = 0, .blue = 0, .alpha = 255
+            .red = 0, .green = 0, .blue = 0, .alpha = 0
         }
     };
 
